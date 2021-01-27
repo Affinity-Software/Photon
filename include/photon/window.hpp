@@ -1,7 +1,7 @@
 #pragma once
 #include <string>
 
-namespace photonGui{
+namespace photon{
    class window
    {
    private:

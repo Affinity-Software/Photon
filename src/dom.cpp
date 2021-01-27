@@ -4,7 +4,7 @@
 #include <mutex>
 #include <map>
 
-using namespace photonGui;
+using namespace photon;
 
 struct _dom::impl
 {

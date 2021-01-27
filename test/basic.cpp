@@ -1,9 +1,9 @@
-#include <photonGui/window.hpp>
+#include <photon/window.hpp>
 #include <thread>
 
 int main(void)
 {
-    photonGui::window test;
+    photon::window test;
     std::this_thread::sleep_for(std::chrono::seconds(10));
     return 0;
 }

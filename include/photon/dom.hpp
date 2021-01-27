@@ -1,7 +1,7 @@
 #pragma once
 #include <vector>
 
-namespace photonGui{
+namespace photon{
    class _dom
    {
    private:

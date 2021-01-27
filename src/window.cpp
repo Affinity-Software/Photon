@@ -1,4 +1,4 @@
-#include "photonGui/window.hpp"
+#include "photon/window.hpp"
 
 #include <GLFW/glfw3.h>
 
@@ -6,7 +6,7 @@
 #include <atomic>
 #include <iostream>
 
-struct photonGui::window::impl
+struct photon::window::impl
 {
 	std::thread rendererThread;
 	std::atomic<bool> threadRuning;
@@ -15,9 +15,9 @@ struct photonGui::window::impl
 
 static void renderLoop(std::atomic<bool>& runing);
 
-unsigned int photonGui::window::impl::windowCount = 0;
+unsigned int photon::window::impl::windowCount = 0;
 
-photonGui::window::window()
+photon::window::window()
 {
 	pimpl = new impl;
 	if(pimpl->windowCount == 0)
@@ -28,7 +28,7 @@ photonGui::window::window()
 	pimpl->rendererThread = std::thread(renderLoop, std::ref(pimpl->threadRuning));
 }
 
-photonGui::window::~window()
+photon::window::~window()
 {
 	pimpl->threadRuning = false;
 	pimpl->rendererThread.join();
