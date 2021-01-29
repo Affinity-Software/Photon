@@ -1,22 +1,11 @@
 #pragma once
 #include <vector>
+#include <string>
 
+//TODO proper dom interface
 namespace photon{
-   class _dom
-   {
-   private:
-      struct impl;
-      impl* pimpl;
-   public:
-      _dom();
-      ~_dom();
-      void insertElement(const dom::element& toinsert);
-      void insertElement(const _dom& toinsert);
-      void deleteElement(const dom::id& id);
-   };
-
    namespace dom{
-      typedef u_int32_t id;
+      typedef unsigned int id;
       enum callbackTypes{};
       struct event{};
       struct callback
@@ -26,11 +15,26 @@ namespace photon{
       };
 
 
-      struct element
+      struct node
       {
          id parent;
+         id tag;
          std::vector<id> children;
          std::vector<callback> callbacs;
       };
    }
+
+   class _dom
+   {
+   private:
+      struct impl;
+      impl* pimpl;
+   public:
+      _dom();
+      ~_dom();
+      void insertNode(const dom::node& toinsert);
+      void insertNode(const _dom& toinsert);
+      void deleteNode(const dom::id& id);
+      std::vector<dom::id> getNodesByTag(const std::string& tag);//TODO implament this
+   };
 }

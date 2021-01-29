@@ -6,18 +6,20 @@
 #include <atomic>
 #include <iostream>
 
-struct photon::window::impl
+using namespace photon;
+struct window::impl
 {
 	std::thread rendererThread;
 	std::atomic<bool> threadRuning;
 	static unsigned int windowCount;
+	_dom dom;
 };
 
 static void renderLoop(std::atomic<bool>& runing);
 
-unsigned int photon::window::impl::windowCount = 0;
+unsigned int window::impl::windowCount = 0;
 
-photon::window::window()
+window::window()
 {
 	pimpl = new impl;
 	if(pimpl->windowCount == 0)
@@ -28,7 +30,7 @@ photon::window::window()
 	pimpl->rendererThread = std::thread(renderLoop, std::ref(pimpl->threadRuning));
 }
 
-photon::window::~window()
+window::~window()
 {
 	pimpl->threadRuning = false;
 	pimpl->rendererThread.join();
@@ -51,6 +53,7 @@ static void renderLoop(std::atomic<bool>& runing){
 
 	/* Make the window's context current */
 	glfwMakeContextCurrent(window);
+	glfwSwapInterval(1);
 
 	/* Loop until the user closes the window */
 	while (!glfwWindowShouldClose(window) && runing)
@@ -65,4 +68,8 @@ static void renderLoop(std::atomic<bool>& runing){
 			glfwPollEvents();
 	}
 	glfwDestroyWindow(window);
+}
+
+_dom& window::getDom(){
+	return pimpl->dom;
 }

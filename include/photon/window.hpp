@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include "photon/dom.hpp"
 
 namespace photon{
    class window
@@ -11,5 +12,6 @@ namespace photon{
       window();
       ~window();
       window(window&) = delete;
+      _dom& getDom();
    };
 }
