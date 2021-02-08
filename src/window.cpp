@@ -12,7 +12,7 @@ struct window::impl
 	std::thread rendererThread;
 	std::atomic<bool> threadRuning;
 	static unsigned int windowCount;
-	_dom dom;
+	std::shared_ptr<_dom> dom;
 };
 
 static void renderLoop(std::atomic<bool>& runing);
@@ -28,6 +28,7 @@ window::window()
 	pimpl->windowCount++;
 	pimpl->threadRuning = true;
 	pimpl->rendererThread = std::thread(renderLoop, std::ref(pimpl->threadRuning));
+	pimpl->dom = std::make_shared<_dom>();
 }
 
 window::~window()
@@ -70,6 +71,6 @@ static void renderLoop(std::atomic<bool>& runing){
 	glfwDestroyWindow(window);
 }
 
-_dom& window::getDom(){
+std::shared_ptr<_dom> window::getDom(){
 	return pimpl->dom;
 }

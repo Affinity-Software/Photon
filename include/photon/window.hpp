@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include <memory>
 #include "photon/dom.hpp"
 
 namespace photon{
@@ -12,6 +13,6 @@ namespace photon{
       window();
       ~window();
       window(window&) = delete;
-      _dom& getDom();
+      std::shared_ptr<_dom> getDom();
    };
 }

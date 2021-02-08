@@ -4,11 +4,11 @@ int main(int argc, char const *argv[])
 {
    photon::window test;
    auto dom = test.getDom();
-
-   dom.insertNode({0,{},{}});
-   dom.insertNode({0,{},{}});
-   dom.insertNode({1,{},{}});
-   dom.deleteNode(1);
+   auto node = dom->getNodeById(0);
+   photon::dom::node insert;
+   photon::dom::node insert2;
+   insert.insertNode(insert2);
+   node.insertNode(insert);
 
    return 0;
 }
