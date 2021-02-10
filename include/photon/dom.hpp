@@ -22,6 +22,8 @@ namespace photon{
          id parent;
          std::vector<id> children;
          std::vector<callback> callbacs;
+         id tag;
+         std::string text;
       };
 
       class node:public nodeInternal

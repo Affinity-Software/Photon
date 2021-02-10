@@ -7,6 +7,10 @@
 
 using namespace photon;
 
+namespace photon::globals{
+   std::unordered_map<std::string,unsigned int> __tagNames__;
+   unsigned int __nextTagId__=1;
+}
 struct _dom::impl
 {
    std::mutex m;
@@ -15,6 +19,7 @@ struct _dom::impl
    void deleteNodeRec(const dom::id& id);
    void insertNode(const _dom& toinsert);
    dom::id insertNode(const dom::nodeInternal& toinsert);
+   dom::id createNode(const dom::id& parent,const std::string& tag, const std::string& data);
    std::unordered_map<std::string,dom::id> tagTypes;
 
 };
@@ -109,4 +114,16 @@ void dom::node::insertNodeRec(const id& parent, const _dom& dom)
       if(!temp.children.size())
          insertNodeRec(nextParent,dom);
    }
+}
+
+dom::id _dom::impl::createNode(const dom::id& parent,const std::string& tag, const std::string& data)
+{
+   auto temp = &globals::__tagNames__[tag];
+   if(*temp)
+   {  
+      *temp = globals::__nextTagId__;
+      globals::__nextTagId__++;
+   }
+   domObjects[nextid] = {parent,{},{},*temp,data};
+   nextid++;
 }
