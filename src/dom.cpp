@@ -27,7 +27,7 @@ struct _dom::impl
 _dom::_dom()
 {
    pimpl = new _dom::impl();
-   pimpl->domObjects[pimpl->nextid] = {0,{},{}};
+   pimpl->domObjects[pimpl->nextid] = {0,{},{},0,""};
    pimpl->nextid++;
 }
 
@@ -79,7 +79,7 @@ void _dom::impl::deleteNodeRec(const dom::id& id)
 dom::node _dom::getNodeById(dom::id id)
 {
    dom::node ret(shared_from_this(),id);
-   return std::move(ret);
+   return ret;
 }
 
 dom::node::node(std::shared_ptr<_dom> parent,id id)
@@ -96,11 +96,11 @@ dom::node::node()
 
 void dom::node::insertNode(const node& toInsert)
 {
-   id next = parentDom->pimpl->insertNode({thisId,{},toInsert.callbacs});
+   id next = parentDom->pimpl->insertNode({thisId,{},toInsert.callbacs,0,""});
    children.push_back(next);
    for(auto& i : toInsert.children)
    {
-      parentDom->pimpl->insertNode({next,{},toInsert.parentDom->pimpl->domObjects[i].callbacs});
+      parentDom->pimpl->insertNode({next,{},toInsert.parentDom->pimpl->domObjects[i].callbacs,0,""});
       insertNodeRec(i,*toInsert.parentDom.get());
    }
 }
@@ -110,7 +110,7 @@ void dom::node::insertNodeRec(const id& parent, const _dom& dom)
    for(auto& i : dom.pimpl->domObjects[parent].children)
    {
       auto& temp = dom.pimpl->domObjects[i];
-      id nextParent = parentDom->pimpl->insertNode({parent,{},temp.callbacs});
+      id nextParent = parentDom->pimpl->insertNode({parent,{},temp.callbacs,0,""});
       if(!temp.children.size())
          insertNodeRec(nextParent,dom);
    }
@@ -126,4 +126,5 @@ dom::id _dom::impl::createNode(const dom::id& parent,const std::string& tag, con
    }
    domObjects[nextid] = {parent,{},{},*temp,data};
    nextid++;
+   return nextid-1;
 }

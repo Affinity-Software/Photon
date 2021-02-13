@@ -10,9 +10,13 @@ else()
   add_compile_options(-Wall -Wextra -pedantic)
 endif()
 
-file(GLOB photonSrc src/*)
+set(CMAKE_CXX_STANDARD 17)
+
+file(GLOB_RECURSE photonSrc src/*.cpp)
 add_library(photonGui STATIC ${photonSrc})
 target_link_libraries(photonGui glfw libglew_static)
 target_include_directories(photonGui PUBLIC include)
+target_include_directories(photonGui PRIVATE src)
+target_compile_definitions(photonGui PUBLIC "$<$<CONFIG:DEBUG>:DEBUG>")
 
 add_subdirectory(test)
