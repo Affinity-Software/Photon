@@ -4,6 +4,7 @@
 #include <mutex>
 #include <map>
 #include <unordered_map>
+#include <pybind11/embed.h>
 
 using namespace photon;
 
