@@ -1,10 +1,15 @@
 #include "photon/dom.hpp"
 
+#include <pybind11/pybind11.h>
+#include <pybind11/embed.h>
+#include <pybind11/eval.h>
+
 #include <vector>
 #include <mutex>
 #include <map>
 #include <unordered_map>
-#include <pybind11/embed.h>
+#include <variant>
+#include <iostream>
 
 using namespace photon;
 
@@ -128,4 +133,18 @@ dom::id _dom::impl::createNode(const dom::id& parent,const std::string& tag, con
    domObjects[nextid] = {parent,{},{},*temp,data};
    nextid++;
    return nextid-1;
+}
+
+void _dom::loadFile(std::string path)
+{
+   pybind11::scoped_interpreter guard{};
+   /* auto sys = pybind11::module::import("sys");
+   sys.attr("path").attr("append")("."); */
+   auto module = pybind11::module::import("photonParser");//TODO: cacheing?
+   auto ret = module.attr("parse")(path);
+   auto list = ret.cast<pybind11::list>();
+   for(auto& i : list)
+   {
+      auto test = i[0].cast<pybind11::int_>();
+   }
 }

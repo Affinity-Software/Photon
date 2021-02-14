@@ -6,3 +6,6 @@ target_link_libraries(domTest photonGui)
 
 add_executable(pybindTest pybindTest.cpp)
 target_link_libraries(pybindTest PRIVATE pybind11::embed)
+
+add_executable(parserTest parserTest.cpp)
+target_link_libraries(parserTest photonGui)

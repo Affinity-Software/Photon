@@ -53,5 +53,6 @@ namespace photon{
       void deleteNode(dom::node toDelete);
       std::vector<dom::id> getNodesByTag(const std::string& tag);//TODO implament this
       dom::node getNodeById(dom::id id);
+      void loadFile(std::string path);
    };
 }
