@@ -4,12 +4,3 @@
 [submodule "lib/glew-cmake"]
 	path = lib/glew-cmake
 	url = https://github.com/Perlmint/glew-cmake
-[submodule "lib/pybind11"]
-	path = lib/pybind11
-	url = https://github.com/pybind/pybind11
-[submodule "libxml2"]
-	path = libxml2
-	url = https://github.com/GNOME/libxml2.git
-[submodule "lib/libxml2"]
-	path = lib/libxml2
-	url = https://github.com/xbmc/libxml2.git

@@ -1,7 +1,7 @@
 #pragma once
-#include <string>
-#include <memory>
-#include "photon/dom.hpp"
+
+#include "photon/node.hpp"
+
 
 namespace photon{
    class window
@@ -13,6 +13,6 @@ namespace photon{
       window();
       ~window();
       window(window&) = delete;
-      std::shared_ptr<_dom> getDom();
+      dom::node getRoot();
    };
 }

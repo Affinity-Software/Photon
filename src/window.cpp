@@ -1,4 +1,5 @@
 #include "photon/window.hpp"
+#include "dom.hpp"
 
 #include <GLFW/glfw3.h>
 
@@ -71,6 +72,7 @@ static void renderLoop(std::atomic<bool>& runing){
 	glfwDestroyWindow(window);
 }
 
-std::shared_ptr<_dom> window::getDom(){
-	return pimpl->dom;
+dom::node window::getRoot(){
+	dom::node temp(pimpl->dom,0);
+	return temp;
 }
