@@ -1,11 +1,13 @@
 #include "photon/window.hpp"
 #include "dom.hpp"
+#include "renderer/renderer.hpp"
 
 #include <GLFW/glfw3.h>
 
 #include <thread>
 #include <atomic>
 #include <iostream>
+#include <exception>
 
 using namespace photon;
 struct window::impl
@@ -16,7 +18,7 @@ struct window::impl
 	std::shared_ptr<_dom> dom;
 };
 
-static void renderLoop(std::atomic<bool>& runing);
+static void renderLoop(std::atomic<bool>& runing, GLFWwindow* window);
 
 unsigned int window::impl::windowCount = 0;
 
@@ -25,10 +27,14 @@ window::window()
 	pimpl = new impl;
 	if(pimpl->windowCount == 0)
 		if(!glfwInit())
-			throw "failed to initialize glfw";
+			throw std::system_error();
 	pimpl->windowCount++;
 	pimpl->threadRuning = true;
-	pimpl->rendererThread = std::thread(renderLoop, std::ref(pimpl->threadRuning));
+	/* Create a windowed mode window and its OpenGL context */
+	GLFWwindow* window = glfwCreateWindow(640, 480, "Hello World", NULL, NULL);
+	if (!window)
+		throw std::system_error();
+	pimpl->rendererThread = std::thread(renderLoop, std::ref(pimpl->threadRuning),window);
 	pimpl->dom = std::make_shared<_dom>();
 }
 
@@ -43,19 +49,17 @@ window::~window()
 }
 
 
-static void renderLoop(std::atomic<bool>& runing){
-	GLFWwindow* window;
-
-	/* Create a windowed mode window and its OpenGL context */
-	window = glfwCreateWindow(640, 480, "Hello World", NULL, NULL);
-	if (!window)
-	{
-		return;
-	}
-
+static void renderLoop(std::atomic<bool>& runing, GLFWwindow* window)
+{
 	/* Make the window's context current */
 	glfwMakeContextCurrent(window);
 	glfwSwapInterval(1);
+	if(glewInit() != GLEW_OK)
+		throw std::system_error();
+
+	photon::renderer::program prog("src/renderer/shaders/main.glslMake");
+	_dom temp;
+	auto mesh = photon::renderer::domToMesh(temp);
 
 	/* Loop until the user closes the window */
 	while (!glfwWindowShouldClose(window) && runing)
@@ -64,6 +68,7 @@ static void renderLoop(std::atomic<bool>& runing){
 			glClear(GL_COLOR_BUFFER_BIT);
 
 			/* Swap front and back buffers */
+			photon::renderer::draw(prog,mesh);
 			glfwSwapBuffers(window);
 
 			/* Poll for and process events */

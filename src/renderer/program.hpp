@@ -4,7 +4,6 @@
 
 #include <string>
 #include <vector>
-#include <string>
 
 namespace photon::renderer{
 class program
@@ -12,9 +11,11 @@ class program
 private:
    GLint id;
    std::vector<GLint> shaderIds;
-   void addShader(const std::vector<std::string>& source,GLenum type);
+   void addShader(const std::vector<std::string>& source,GLint type);
 public:
-   program(const std::vector<std::string>& sources);
+   program(const std::string& sources);
    ~program();
+   void bind() const;
+   void unbind() const;
 };
 }
