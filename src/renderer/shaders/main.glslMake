@@ -1,3 +1,5 @@
 input position
+input color
+input localCord
 file main.frag
 file main.vert

@@ -30,7 +30,8 @@ namespace photon::renderer
    public:
       mesh();
       ~mesh();
-      void loadData(const vertexBufferData& toLoad);
+      template<typename VT>
+      void loadData(const std::vector<VT>& vertexData, const std::vector<unsigned int>& indexData);
       void bind() const;
       void unbind() const;
       int getIndexCount() const;
@@ -57,27 +58,25 @@ mesh<T...>::mesh()
    ibId = bufers[1];
 
    // setup vertex buffer based on templet
-   {
-      std::vector<vertexDataSpec> vdc = {typeToSpec<T>()...};
-      GLC(glBindBuffer(GL_ARRAY_BUFFER,vbId));
+   const std::vector<vertexDataSpec> vdc = {typeToSpec<T>()...};
+   GLC(glBindBuffer(GL_ARRAY_BUFFER,vbId));
 
-      GLint stride = 0;
-      for(auto& i : vdc) stride += i.size * i.byteSize;
-      vertexSize = stride;
-      GLintptr byteOfset = 0;
-      for(int i = 0; i < vdc.size();i++)
-      {
-         GLC(glEnableVertexAttribArray(i));
-         GLC(glVertexAttribPointer(
-            i,
-            vdc[i].size,
-            vdc[i].type,
-            vdc[i].normalised,
-            vertexSize,
-            (void*)byteOfset
-         ));
-         byteOfset += vdc[i].size * vdc[i].byteSize; 
-      }
+   GLint stride = 0;
+   for(auto& i : vdc) stride += i.size * i.byteSize;
+   vertexSize = stride;
+   GLintptr byteOfset = 0;
+   for(int i = 0; i < vdc.size();i++)
+   {
+      GLC(glEnableVertexAttribArray(i));
+      GLC(glVertexAttribPointer(
+         i,
+         vdc[i].size,
+         vdc[i].type,
+         vdc[i].normalised,
+         vertexSize,
+         (void*)byteOfset
+      ));
+      byteOfset += vdc[i].size * vdc[i].byteSize; 
    }
 }
 
@@ -89,19 +88,30 @@ mesh<T...>::~mesh()
 }
 
 template<typename... T>
-void mesh<T...>::loadData(const vertexBufferData& toLoad)
-{
-   vbSize = toLoad.vertexCount;
-   GLC(glBufferData(GL_ARRAY_BUFFER,         vbSize * vertexSize,     toLoad.vertexData, GL_DYNAMIC_DRAW));
-   ibSize = toLoad.indexCount;
-   GLC(glBufferData(GL_ELEMENT_ARRAY_BUFFER, ibSize * sizeof(GLuint), toLoad.indexData , GL_DYNAMIC_DRAW));
+template<typename VT>
+void mesh<T...>::loadData(const std::vector<VT>& vertexData, const std::vector<unsigned int>& indexData)
+{	
+   vbSize = vertexData.size();
+   GLC(glBufferData(
+      GL_ARRAY_BUFFER,
+      vbSize * vertexSize,
+      vertexData.data(),
+      GL_DYNAMIC_DRAW
+    ));
+   ibSize = indexData.size();
+   GLC(glBufferData(
+      GL_ELEMENT_ARRAY_BUFFER,
+      ibSize * sizeof(unsigned int),
+      indexData.data(),
+      GL_DYNAMIC_DRAW
+    ));
 }
 
 template<typename... T>
 void mesh<T...>::bind() const
 {
    GLC(glBindBuffer(GL_ARRAY_BUFFER,vbId));
-   GLC(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,vbId));
+   GLC(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,ibId));
 }
 
 template<typename... T>

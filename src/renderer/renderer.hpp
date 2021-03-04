@@ -16,10 +16,10 @@ namespace photon::renderer
             GL_TRIANGLES,
             mesh.getIndexCount(),
             GL_UNSIGNED_INT,
-            nullptr
+            (void*)0
         ));
-        //shaderProgram.unbind();
-        //mesh.unbind();
+        shaderProgram.unbind();
+        mesh.unbind();
     }
-    mesh<glm::vec2> domToMesh(const _dom& dom);
+    mesh<glm::vec2,glm::vec4,glm::vec2> domToMesh(const _dom& dom);
 } // namespace photon::renderer

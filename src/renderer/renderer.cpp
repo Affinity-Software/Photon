@@ -4,27 +4,32 @@
 
 namespace photon::renderer
 {
-    mesh<glm::vec2> domToMesh(const _dom& dom) 
+    struct vertexData
     {
-        photon::renderer::mesh<glm::vec2> temporary;
-        auto vertex = new glm::vec2[4];
-        vertex[0] = {-0.5, -0.5};
-        vertex[1] = { 0.5, -0.5};
-        vertex[2] = { 0.5,  0.5};
-        vertex[3] = {-0.5,  0.5};
+        glm::vec2 position;
+        glm::vec4 color;
+        glm::vec2 localCord;
+    };
+    mesh<glm::vec2,glm::vec4,glm::vec2> domToMesh(const _dom& dom) 
+    {
+        photon::renderer::mesh<glm::vec2,glm::vec4,glm::vec2> temporary;
+        std::vector<vertexData> vertex;
+        vertex.push_back({{-0.75f, -0.75f},{1.0f, 1.0f, 0.0f ,1.0f},{-1.0f, -1.0f}});
+        vertex.push_back({{ 0.75f, -0.75f},{1.0f, 1.0f, 0.0f ,1.0f},{-1.0f,  1.0f}});
+        vertex.push_back({{ 0.75f,  0.75f},{1.0f, 1.0f, 0.0f ,1.0f},{ 1.0f,  1.0f}});
+        vertex.push_back({{-0.75f,  0.75f},{1.0f, 1.0f, 0.0f ,1.0f},{ 1.0f, -1.0f}});
+        vertex.push_back({{-0.5f, -0.5f},{1.0f, 1.0f, 1.0f ,1.0f},{-1.0f, -1.0f}});
+        vertex.push_back({{ 0.5f, -0.5f},{1.0f, 1.0f, 1.0f ,1.0f},{-1.0f,  1.0f}});
+        vertex.push_back({{ 0.5f,  0.5f},{1.0f, 1.0f, 1.0f ,1.0f},{ 1.0f,  1.0f}});
+        vertex.push_back({{-0.5f,  0.5f},{1.0f, 1.0f, 1.0f ,1.0f},{ 1.0f, -1.0f}});
 
-        auto index = new unsigned int[6];
-        
-        index[0] = 0;
-        index[1] = 1;
-        index[2] = 2;
-        index[3] = 2;
-        index[4] = 3;
-        index[5] = 0;
+        std::vector<unsigned int> index = {
+            0,1,2,2,3,0,
+            4,5,6,5,6,4
+        };
 
-        vertexBufferData temp = {vertex,4,index,6};
         temporary.bind();
-        temporary.loadData(temp);
+        temporary.loadData(vertex,index);
         return temporary;
     }
 }

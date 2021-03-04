@@ -48,17 +48,17 @@ program::program(const std::string& shaderMakeFilePath)
    if(inputs.size() > GL_MAX_VERTEX_ATTRIBS)
       throw std::out_of_range("you are crazy");
 
-   for(size_t i = 0; i < inputs.size(); i++)
-   {
-      GLC(glBindAttribLocation(id,i,inputs[i].c_str()));
-   }
-
    for(auto& i : shaderIds)
    {
       GLC(glAttachShader(id,i));
    }
 
    GLC(glLinkProgram(id));
+   for(size_t i = 0; i < inputs.size(); i++)
+   {
+      GLC(glBindAttribLocation(id,i,inputs[i].c_str()));
+   }
+
 
 #ifdef DEBUG
    GLint success;
@@ -99,14 +99,10 @@ void program::addShader(const std::vector<std::string>& source,GLint type)
 {
    GLint shaderId = GLC(glCreateShader(type));
    size_t srcCount = source.size();
-   GLint* srcSize = reinterpret_cast<GLint*>(alloca(srcCount*sizeof(GLint)));
    const GLchar**  srcStrings = reinterpret_cast<const GLchar**>(alloca(srcCount*sizeof(GLchar)));
    for(size_t i = 0; i < srcCount;i++)
-   {
-      srcSize[i] = source[i].length();
       srcStrings[i] = source[i].c_str();
-   }
-   GLC(glShaderSource(shaderId,srcCount,srcStrings,srcSize));
+   GLC(glShaderSource(shaderId,srcCount,srcStrings,NULL));
    GLC(glCompileShader(shaderId));
 
 #ifdef DEBUG

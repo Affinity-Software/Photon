@@ -48,11 +48,13 @@ window::~window()
 	delete pimpl;
 }
 
+static void onResize(GLFWwindow* window, int width, int height);
 
 static void renderLoop(std::atomic<bool>& runing, GLFWwindow* window)
 {
 	/* Make the window's context current */
 	glfwMakeContextCurrent(window);
+	glfwSetFramebufferSizeCallback(window,onResize);
 	glfwSwapInterval(1);
 	if(glewInit() != GLEW_OK)
 		throw std::system_error();
@@ -61,18 +63,20 @@ static void renderLoop(std::atomic<bool>& runing, GLFWwindow* window)
 	_dom temp;
 	auto mesh = photon::renderer::domToMesh(temp);
 
+	GLC(glClearColor(1.0,1.0,1.0,1.0));
+
 	/* Loop until the user closes the window */
 	while (!glfwWindowShouldClose(window) && runing)
 	{
-			/* Render here */
-			glClear(GL_COLOR_BUFFER_BIT);
+		/* Render here */
+		glClear(GL_COLOR_BUFFER_BIT);
 
-			/* Swap front and back buffers */
-			photon::renderer::draw(prog,mesh);
-			glfwSwapBuffers(window);
+		/* Swap front and back buffers */
+		photon::renderer::draw(prog,mesh);
+		glfwSwapBuffers(window);
 
-			/* Poll for and process events */
-			glfwPollEvents();
+		/* Poll for and process events */
+		glfwPollEvents();
 	}
 	glfwDestroyWindow(window);
 }
@@ -80,4 +84,10 @@ static void renderLoop(std::atomic<bool>& runing, GLFWwindow* window)
 dom::node window::getRoot(){
 	dom::node temp(pimpl->dom,0);
 	return temp;
+}
+
+static void onResize(GLFWwindow* window, int width, int height)
+{
+	GLC(glViewport(0, 0, width, height));
+	window;
 }
