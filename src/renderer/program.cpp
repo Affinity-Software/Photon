@@ -8,11 +8,11 @@
 
 using namespace photon::renderer;
 
-static std::tuple<std::vector<std::string>,std::vector<std::string>> parseShaderMake(const std::string& path);
+static std::tuple<std::vector<std::string>,std::vector<std::string>,std::vector<std::string>> parseShaderMake(const std::string& path);
 
 program::program(const std::string& shaderMakeFilePath)
 {
-   auto [inputs , paths] = parseShaderMake(shaderMakeFilePath);
+   auto [inputs , paths, uniforms] = parseShaderMake(shaderMakeFilePath);
 
    std::vector<std::string> vsSrc;
    std::vector<std::string> fsSrc;
@@ -49,16 +49,9 @@ program::program(const std::string& shaderMakeFilePath)
       throw std::out_of_range("you are crazy");
 
    for(auto& i : shaderIds)
-   {
       GLC(glAttachShader(id,i));
-   }
 
    GLC(glLinkProgram(id));
-   for(size_t i = 0; i < inputs.size(); i++)
-   {
-      GLC(glBindAttribLocation(id,i,inputs[i].c_str()));
-   }
-
 
 #ifdef DEBUG
    GLint success;
@@ -73,6 +66,12 @@ program::program(const std::string& shaderMakeFilePath)
       throw std::logic_error(logs);
    }
 #endif
+
+   for(size_t i = 0; i < inputs.size(); i++)
+      GLC(glBindAttribLocation(id,i,inputs[i].c_str()));
+
+   for(auto& i : uniforms)
+      uniformNames[i] = GLC(glGetUniformLocation(id,i.c_str()));
 }
 
 program::~program()
@@ -121,7 +120,8 @@ void program::addShader(const std::vector<std::string>& source,GLint type)
    shaderIds.push_back(shaderId);
 }
 
-static std::tuple<std::vector<std::string>,std::vector<std::string>> parseShaderMake(const std::string& path)
+static std::tuple<std::vector<std::string>,std::vector<std::string>,std::vector<std::string>>
+parseShaderMake(const std::string& path)
 {
    std::fstream file(path);
 
@@ -130,6 +130,7 @@ static std::tuple<std::vector<std::string>,std::vector<std::string>> parseShader
 
    std::vector<std::string> inputs;
    std::vector<std::string> paths;
+   std::vector<std::string> uniforms;
 
    std::string line;
    while (std::getline(file,line))
@@ -142,9 +143,37 @@ static std::tuple<std::vector<std::string>,std::vector<std::string>> parseShader
          inputs.push_back(line);
       else if(type == "file")
          paths.push_back(line);
+      else if(type == "uniform")
+         uniforms.push_back(line);
       else
          throw std::logic_error("unkown type");
    }
 
-   return {inputs, paths};
+   return {inputs, paths, uniforms};
 }
+
+void program::setUniform(std::string name,glm::fvec1 value){GLC(glUseProgram(id));GLC(glUniform1f(uniformNames[name],value.x));}
+void program::setUniform(std::string name,glm::fvec2 value){GLC(glUseProgram(id));GLC(glUniform2f(uniformNames[name],value.x,value.y));}
+void program::setUniform(std::string name,glm::fvec3 value){GLC(glUseProgram(id));GLC(glUniform3f(uniformNames[name],value.x,value.y,value.z));}
+void program::setUniform(std::string name,glm::fvec4 value){GLC(glUseProgram(id));GLC(glUniform4f(uniformNames[name],value.x,value.y,value.z,value.w));}
+void program::setUniform(std::string name,glm::ivec1 value){GLC(glUseProgram(id));GLC(glUniform1i(uniformNames[name],value.x));}
+void program::setUniform(std::string name,glm::ivec2 value){GLC(glUseProgram(id));GLC(glUniform2i(uniformNames[name],value.x,value.y));}
+void program::setUniform(std::string name,glm::ivec3 value){GLC(glUseProgram(id));GLC(glUniform3i(uniformNames[name],value.x,value.y,value.z));}
+void program::setUniform(std::string name,glm::ivec4 value){GLC(glUseProgram(id));GLC(glUniform4i(uniformNames[name],value.x,value.y,value.z,value.w));}
+void program::setUniform(std::string name,glm::mat2 value){GLC(glUseProgram(id));GLC(glUniformMatrix2fv(uniformNames[name],1,GL_FALSE,&value[0][0]));}
+void program::setUniform(std::string name,glm::mat3 value){GLC(glUseProgram(id));GLC(glUniformMatrix3fv(uniformNames[name],1,GL_FALSE,&value[0][0]));}
+void program::setUniform(std::string name,glm::mat4 value){GLC(glUseProgram(id));GLC(glUniformMatrix4fv(uniformNames[name],1,GL_FALSE,&value[0][0]));}
+void program::setUniform(std::string name,glm::mat2x3 value){GLC(glUseProgram(id));GLC(glUniformMatrix2x3fv(uniformNames[name],1,GL_FALSE,&value[0][0]));}
+void program::setUniform(std::string name,glm::mat3x2 value){GLC(glUseProgram(id));GLC(glUniformMatrix3x2fv(uniformNames[name],1,GL_FALSE,&value[0][0]));}
+void program::setUniform(std::string name,glm::mat2x4 value){GLC(glUseProgram(id));GLC(glUniformMatrix2x4fv(uniformNames[name],1,GL_FALSE,&value[0][0]));}
+void program::setUniform(std::string name,glm::mat4x2 value){GLC(glUseProgram(id));GLC(glUniformMatrix4x2fv(uniformNames[name],1,GL_FALSE,&value[0][0]));}
+void program::setUniform(std::string name,glm::mat3x4 value){GLC(glUseProgram(id));GLC(glUniformMatrix3x4fv(uniformNames[name],1,GL_FALSE,&value[0][0]));}
+void program::setUniform(std::string name,glm::mat4x3 value){GLC(glUseProgram(id));GLC(glUniformMatrix4x3fv(uniformNames[name],1,GL_FALSE,&value[0][0]));}
+void program::setUniform(std::string name,std::vector<glm::fvec1> value){GLC(glUseProgram(id));GLC(glUniform1fv(uniformNames[name],value.size(),(GLfloat*)value.data()));}
+void program::setUniform(std::string name,std::vector<glm::fvec2> value){GLC(glUseProgram(id));GLC(glUniform2fv(uniformNames[name],value.size(),(GLfloat*)value.data()));}
+void program::setUniform(std::string name,std::vector<glm::fvec3> value){GLC(glUseProgram(id));GLC(glUniform3fv(uniformNames[name],value.size(),(GLfloat*)value.data()));}
+void program::setUniform(std::string name,std::vector<glm::fvec4> value){GLC(glUseProgram(id));GLC(glUniform4fv(uniformNames[name],value.size(),(GLfloat*)value.data()));}
+void program::setUniform(std::string name,std::vector<glm::ivec1> value){GLC(glUseProgram(id));GLC(glUniform1iv(uniformNames[name],value.size(),(GLint*)value.data()));}
+void program::setUniform(std::string name,std::vector<glm::ivec2> value){GLC(glUseProgram(id));GLC(glUniform2iv(uniformNames[name],value.size(),(GLint*)value.data()));}
+void program::setUniform(std::string name,std::vector<glm::ivec3> value){GLC(glUseProgram(id));GLC(glUniform3iv(uniformNames[name],value.size(),(GLint*)value.data()));}
+void program::setUniform(std::string name,std::vector<glm::ivec4> value){GLC(glUseProgram(id));GLC(glUniform4iv(uniformNames[name],value.size(),(GLint*)value.data()));}
