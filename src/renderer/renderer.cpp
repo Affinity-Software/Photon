@@ -25,7 +25,7 @@ namespace photon::renderer
 
         std::vector<unsigned int> index = {
             0,1,2,2,3,0,
-            4,5,6,5,6,4
+            4,5,6,6,7,4
         };
 
         temporary.bind();
