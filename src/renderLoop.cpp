@@ -149,6 +149,9 @@ void renderLoop(std::atomic<bool>& runing, GLFWwindow* window)
 	prog.setUniform("mpv",proj);
 
 	GLC(glClearColor(1.0,1.0,1.0,1.0));
+	GLC(glEnable(GL_BLEND));
+	GLC(glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA));
+	GLC(glPointSize(10.f));
 
 	/* Loop until the user closes the window */
 	while (!glfwWindowShouldClose(window) && runing)

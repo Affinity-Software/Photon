@@ -1,6 +1,7 @@
 input position
 input color
 input localCord
+input borderColor
 uniform mvp
 file main.frag
 file main.vert
