@@ -21,5 +21,5 @@ namespace photon::renderer
         shaderProgram.unbind();
         mesh.unbind();
     }
-    mesh<glm::vec2,glm::vec4,glm::vec2,glm::vec4> domToMesh(const _dom& dom);
+    mesh<glm::vec2,glm::vec4,glm::vec2,glm::vec2,glm::vec2,glm::vec2,glm::vec2,glm::vec4> domToMesh(const _dom& dom);
 } // namespace photon::renderer

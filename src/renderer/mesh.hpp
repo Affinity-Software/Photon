@@ -65,7 +65,7 @@ mesh<T...>::mesh()
    for(auto& i : vdc) stride += i.size * i.byteSize;
    vertexSize = stride;
    GLintptr byteOfset = 0;
-   for(int i = 0; i < vdc.size();i++)
+   for(size_t i = 0; i < vdc.size();i++)
    {
       GLC(glEnableVertexAttribArray(i));
       GLC(glVertexAttribPointer(

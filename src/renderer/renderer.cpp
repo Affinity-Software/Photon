@@ -4,6 +4,7 @@
 #include <array>
 #include <tuple>
 #include <iterator>
+#include <iostream>
 
 namespace photon::renderer
 {
@@ -12,135 +13,146 @@ namespace photon::renderer
 		glm::vec2 position;
 		glm::vec4 color;
 		glm::vec2 localCord;
+		glm::vec2 topLefRounding;
+		glm::vec2 topRightRounding;
+		glm::vec2 bottomLefRounding;
+		glm::vec2 bottomRightRounding;
 		glm::vec4 bordercolor;
 	};
-	
-	static std::tuple<std::array<vertexData,24>,std::array<unsigned int,54>>
-	createElement(const int indexOfset, const glm::vec2& topLef, const glm::vec2& bottomRight, const photon::style& style)
+
+	static inline glm::vec2 ofsetCordonates(const glm::vec2& point , const glm::vec2& ofset)
 	{
-		std::array<vertexData,24> vertex;
+		return (point - glm::vec2(1)) * ofset + glm::vec2(1);
+	}
+
+	static std::tuple<std::array<vertexData,14>,std::array<unsigned int,18>>
+	createElement(const int indexOfset, const glm::vec2& topLeft, const glm::vec2& bottomRight, const photon::style& style)
+	{
+		std::array<vertexData,14> vertex;
+
 		/* 
-			vertecies
-			x = single vertex
-			y double vertex
-			y----x--------x----y
-			|    |        |    |
-			x----y--------y----x
-			|    |        |    |
-			|    |        |    |
-			|    |        |    |
-			x----y--------y----x
-			|    |        |    |
-			y----x--------x----y
+			vertex structure
+			x--------------x
+			| \          / |
+			|  x--------x  |
+			| /          \ |
+			x--------------x
 		 */
-		const float xTop[4] = {
-			topLef.x,
-			topLef.x + style.border.topLeft.x,
-			bottomRight.x - style.border.topRight.x,
-			bottomRight.x
+
+		const float with = topLeft.x - bottomRight.x;
+		const float height = topLeft.y - bottomRight.y;
+		float lessSignificantDirecrioPerTwo;
+
+		if(with > height)
+			lessSignificantDirecrioPerTwo = height/2;
+		else
+			lessSignificantDirecrioPerTwo = with/2;
+
+		const glm::vec2 positions[6] = {
+			{topLeft                 },
+			{bottomRight.x, topLeft.y},
+			{bottomRight             },
+			{topLeft.x, bottomRight.y},
+			{topLeft - glm::vec2(lessSignificantDirecrioPerTwo)},
+			{bottomRight + glm::vec2(lessSignificantDirecrioPerTwo)}
 		};
-		const float yLeft[4] = {
-			topLef.y,
-			topLef.y - style.border.topLeft.y,
-			bottomRight.y + style.border.bottomLeft.y,
-			bottomRight.y
+
+		//style rounding values
+		// t = top, b = bottom, l = left, r = right, r = roundind
+		const glm::vec2  tlr = glm::vec2(1) / style.border.topLeft;
+		const glm::vec2  trr = glm::vec2(1) / style.border.topRight;
+		const glm::vec2  blr = glm::vec2(1) / style.border.bottomLeft;
+		const glm::vec2  brr = glm::vec2(1) / style.border.bottomRight;
+
+		//iner vertex local cordinates
+		const glm::vec2 tl = {
+			with > height ? ((height/with)/2) : .5f,
+			with > height ? .5f : ((with/height)/2)
 		};
-		const float xBot[4] = {
-			topLef.x,
-			topLef.x + style.border.bottomLeft.x,
-			bottomRight.x - style.border.bottomRight.x,
-			bottomRight.x
+		const glm::vec2 br = {
+			with > height ? 1 - ((height/with)/2) : .5f,
+			with > height ? .5f : 1 - ((with/height)/2)
 		};
-		const float yRight[4] = {
-			topLef.y,
-			topLef.y - style.border.topRight.y,
-			bottomRight.y + style.border.bottomRight.y,
-			bottomRight.y
+
+		//rounding fields
+		const glm::vec2 roundtl[6] = {
+			ofsetCordonates({1,1},tlr),
+			ofsetCordonates({0,1},blr),
+			ofsetCordonates({0,0},blr),
+			ofsetCordonates({1,0},blr),
+			ofsetCordonates(br,blr),
+			ofsetCordonates(tl,blr)
 		};
-		vertex[0]  = {{xTop[0], yRight[0]},style.bgColor,{1.f,1.f},style.border.top.color};
-		vertex[1]  = {{xTop[1], yRight[0]},style.bgColor,{0.f,1.f},style.border.top.color};
-		vertex[2]  = {{xTop[1], yRight[1]},style.bgColor,{0.f,0.f},style.border.top.color};
+		const glm::vec2 roundtr[6] = {
+			ofsetCordonates({0,1},trr),
+			ofsetCordonates({1,1},brr),
+			ofsetCordonates({1,0},brr),
+			ofsetCordonates({0,0},brr),
+			ofsetCordonates(tl,brr),
+			ofsetCordonates(br,brr)
+		};
+		const glm::vec2 roundbl[6] = {
+			ofsetCordonates({1,0},blr),
+			ofsetCordonates({0,0},trr),
+			ofsetCordonates({0,1},trr),
+			ofsetCordonates({1,1},trr),
+			ofsetCordonates(br,trr),
+			ofsetCordonates(tl,trr)
+		};
+		const glm::vec2 roundbr[6] = {
+			ofsetCordonates({0,0},brr),
+			ofsetCordonates({1,0},tlr),
+			ofsetCordonates({1,1},tlr),
+			ofsetCordonates({0,1},tlr),
+			ofsetCordonates(tl,tlr),
+			ofsetCordonates(br,tlr)
+		};
 
-		vertex[3]  = {{xTop[3], yLeft[0]} ,style.bgColor,{1.f,1.f},style.border.top.color};
-		vertex[4]  = {{xTop[2], yLeft[0]} ,style.bgColor,{0.f,1.f},style.border.top.color};
-		vertex[5]  = {{xTop[2], yLeft[1]} ,style.bgColor,{0.f,0.f},style.border.top.color};
+		if(with > height)
+		{
+			vertex[0] = {positions[0],style.bgColor,{1,1},roundtl[0],roundtr[0],roundbr[0],roundbl[0],style.border.top.color};
+			vertex[1] = {positions[1],style.bgColor,{1,1},roundtl[1],roundtr[1],roundbr[1],roundbl[1],style.border.top.color};
+			vertex[2] = {positions[4],style.bgColor,{0,0},roundtl[4],roundtr[4],roundbr[4],roundbl[4],style.border.top.color};
+			vertex[3] = {positions[5],style.bgColor,{0,0},roundtl[5],roundtr[5],roundbr[5],roundbl[5],style.border.top.color};
 
-		vertex[6]  = {{xBot[0], yRight[3]},style.bgColor,{1.f,1.f},style.border.bottom.color};
-		vertex[7]  = {{xBot[1], yRight[3]},style.bgColor,{0.f,1.f},style.border.bottom.color};
-		vertex[8]  = {{xBot[1], yRight[2]},style.bgColor,{0.f,0.f},style.border.bottom.color};
+			vertex[4] = {positions[2],style.bgColor,{1,1},roundtl[2],roundtr[2],roundbr[2],roundbl[2],style.border.bottom.color};
+			vertex[5] = {positions[3],style.bgColor,{1,1},roundtl[3],roundtr[3],roundbr[3],roundbl[3],style.border.bottom.color};
+			vertex[6] = {positions[4],style.bgColor,{0,0},roundtl[4],roundtr[4],roundbr[4],roundbl[4],style.border.bottom.color};
+			vertex[7] = {positions[5],style.bgColor,{0,0},roundtl[5],roundtr[5],roundbr[5],roundbl[5],style.border.bottom.color};
 
-		vertex[9]  = {{xBot[3], yLeft[3]} ,style.bgColor,{1.f,1.f},style.border.bottom.color};
-		vertex[10] = {{xBot[2], yLeft[3]} ,style.bgColor,{0.f,1.f},style.border.bottom.color};
-		vertex[11] = {{xBot[2], yLeft[2]} ,style.bgColor,{0.f,0.f},style.border.bottom.color};
+			vertex[8] =  {positions[0],style.bgColor,{1,1},roundtl[0],roundtr[0],roundbr[0],roundbl[0],style.border.left.color};
+			vertex[9] =  {positions[3],style.bgColor,{1,1},roundtl[3],roundtr[3],roundbr[3],roundbl[3],style.border.left.color};
+			vertex[10] = {positions[4],style.bgColor,{0,0},roundtl[4],roundtr[4],roundbr[4],roundbl[4],style.border.left.color};
 
+			vertex[11] = {positions[1],style.bgColor,{1,1},roundtl[1],roundtr[1],roundbr[1],roundbl[1],style.border.right.color};
+			vertex[12] = {positions[2],style.bgColor,{1,1},roundtl[2],roundtr[2],roundbr[2],roundbl[2],style.border.right.color};
+			vertex[13] = {positions[5],style.bgColor,{0,0},roundtl[5],roundtr[5],roundbr[5],roundbl[5],style.border.right.color};
+		}
+		else
+		{
+			std::cerr << "not implemented" << std::endl;
+		}
 
-		vertex[12] = {{xTop[0], yLeft[0]},style.bgColor,{1.f,1.f},style.border.left.color};
-		vertex[13] = {{xTop[0], yLeft[1]},style.bgColor,{1.f,0.f},style.border.left.color};
-		vertex[14] = {{xTop[1], yLeft[1]},style.bgColor,{0.f,0.f},style.border.left.color};
-
-		vertex[15] = {{xBot[0], yLeft[2]} ,style.bgColor,{1.f,0.f},style.border.left.color};
-		vertex[16] = {{xBot[0], yLeft[3]} ,style.bgColor,{1.f,1.f},style.border.left.color};
-		vertex[17] = {{xBot[1], yLeft[2]} ,style.bgColor,{0.f,0.f},style.border.left.color};
-
-		vertex[18] = {{xTop[3], yRight[0]},style.bgColor,{1.f,1.f},style.border.right.color};
-		vertex[19] = {{xTop[2], yRight[1]},style.bgColor,{0.f,0.f},style.border.right.color};
-		vertex[20] = {{xTop[3], yRight[1]},style.bgColor,{1.f,0.f},style.border.right.color};
-
-		vertex[21] = {{xBot[3], yRight[3]} ,style.bgColor,{1.f,1.f},style.border.right.color};
-		vertex[22] = {{xBot[2], yRight[2]} ,style.bgColor,{0.f,0.f},style.border.right.color};
-		vertex[23] = {{xBot[3], yRight[2]} ,style.bgColor,{1.f,0.f},style.border.right.color};
-
-		std::array<unsigned int,54> index = {
-			//corner tris
+		std::array<unsigned int,18> index = {
 			0,1,2,
-			3,4,5,
-			6,7,8,
-			9,10,11,
-			12,13,14,
-			15,16,17,
-			18,19,20,
-			21,22,23,
-			//top quad
-			1,2,4,
-			4,5,2,
-			//bottom quad
-			7,8,11,
-			10,11,7,
-			//left quad
-			13,14,15,
-			15,17,14,
-			//right quad
-			19,20,22,
-			22,23,20,
-			//center quad
-			2,5,8,
-			5,8,11
+			1,2,3,
+			4,5,6,
+			4,6,7,
+			8,9,10,
+			11,12,13
 		};
-
 		for(int i = 0; i < 54; i++)
 			index[i]+=indexOfset;
 
 		return {vertex,index};
 	}
 
-	mesh<glm::vec2,glm::vec4,glm::vec2,glm::vec4> domToMesh(const _dom& dom) 
+	mesh<glm::vec2,glm::vec4,glm::vec2,glm::vec2,glm::vec2,glm::vec2,glm::vec2,glm::vec4> domToMesh(const _dom& dom) 
 	{
-		photon::renderer::mesh<glm::vec2,glm::vec4,glm::vec2,glm::vec4> temporary;
+		photon::renderer::mesh<glm::vec2,glm::vec4,glm::vec2,glm::vec2,glm::vec2,glm::vec2,glm::vec2,glm::vec4> temporary;
 		std::vector<vertexData> vertex;
 		std::vector<unsigned int> index;
-		/*vertex.push_back({{-0.75f, -0.75f},{1.0f, 1.0f, 0.0f ,1.0f},{-1.0f, -1.0f}});
-		vertex.push_back({{ 0.75f, -0.75f},{1.0f, 1.0f, 0.0f ,1.0f},{-1.0f,  1.0f}});
-		vertex.push_back({{ 0.75f,  0.75f},{1.0f, 1.0f, 0.0f ,1.0f},{ 1.0f,  1.0f}});
-		vertex.push_back({{-0.75f,  0.75f},{1.0f, 1.0f, 0.0f ,1.0f},{ 1.0f, -1.0f}});
-		vertex.push_back({{-0.5f, -0.5f},{1.0f, 1.0f, 1.0f ,1.0f},{-1.0f, -1.0f}});
-		vertex.push_back({{ 0.5f, -0.5f},{1.0f, 1.0f, 1.0f ,1.0f},{-1.0f,  1.0f}});
-		vertex.push_back({{ 0.5f,  0.5f},{1.0f, 1.0f, 1.0f ,1.0f},{ 1.0f,  1.0f}});
-		vertex.push_back({{-0.5f,  0.5f},{1.0f, 1.0f, 1.0f ,1.0f},{ 1.0f, -1.0f}});
-
-		std::vector<unsigned int> index = {
-			0,1,2,2,3,0,
-			4,5,6,6,7,4
-		}; */
+		
 		photon::style temp;
 		glm::vec4 red = {1.0f, 0.0f, 0.0f, 1.0f};
 		glm::vec4 grean = {0.0f, 1.0f, 0.0f, 1.0f};
@@ -150,13 +162,13 @@ namespace photon::renderer
 
 		temp.border = {
 			{0,red},{0,grean},{0,blue},{0,yelow},
-			{.2f,.3f},
+			{.8f,.3f},
 			{.2f,.3f},
 			{.2f,.3f},
 			{.2f,.3f}
 		};
 		temp.bgColor = idk;
-		auto [retVertex,retIndex] = createElement(0,{-0.75f,0.75},{0.75f,-0.75f},temp);
+		auto [retVertex,retIndex] = createElement(0,{0.8f,0.6f},{-0.8f,-0.6f},temp);
 
 		index.insert(index.end(),std::begin(retIndex),std::end(retIndex));
 		vertex.insert(vertex.end(),std::begin(retVertex),std::end(retVertex));

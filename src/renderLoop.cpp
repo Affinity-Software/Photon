@@ -43,8 +43,8 @@ static void setProjection(userPointerData* upd)
 	glm::mat4 proj = glm::ortho(
 		-scale,
 		scale,
-		-ratio*scale,
-		scale*ratio,
+		ratio*scale,
+		-scale*ratio,
 		-1.0f,1.0f
 	);
 	glm::mat4 view = glm::translate(glm::mat4(1.f),glm::vec3(ofset,0.f));

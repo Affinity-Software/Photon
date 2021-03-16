@@ -13,11 +13,7 @@ namespace photon
             glm::vec4 color;
          };
          side top,right,bottom,left;
-         struct radius
-         {
-            float x,y;
-         };
-         radius topLeft,bottomLeft,bottomRight,topRight;
+         glm::vec2 topLeft,bottomLeft,bottomRight,topRight;
       };
       border border;
       enum layout{
