@@ -12,6 +12,14 @@ namespace photon
 {
     namespace parser
     {
+
+        struct globals
+        {
+            unsigned int current_line;
+            int data_parsed;
+            std::vector<std::string> openTags;
+        };
+
         class attribute
         {
         public:
@@ -30,11 +38,11 @@ namespace photon
         void fetch_attr(std::string line, int end, int start, std::string tagname, std::vector<attribute> &refer);
         int get_height(attribute attr);
         int get_width(attribute attr);
-        void fetch_starting_tag(std::string line, int index);
-        void fetch_endtag(std::string search_string);
-        void fetch_data(std::string search_string);
-        void encountered_dataORendtag(std::string line, int found, int dataEndPointAR);
-        void fetch_line(std::string line, int dataEndPointAR);
+        void fetch_starting_tag(std::string line, int index, globals& global);
+        void fetch_endtag(std::string search_string, globals& global);
+        void fetch_data(std::string search_string, globals& global);
+        void encountered_dataORendtag(std::string line, int found, int dataEndPointAR, globals& global);
+        void fetch_line(std::string line, int dataEndPointAR, globals& global);
         void parse(std::string path);
         void get_dimensions(std::vector<attribute> attrs, int &height, int &width);
 
