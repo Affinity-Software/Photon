@@ -1,6 +1,8 @@
 #include "photon/window.hpp"
+#include "photon/parser.hpp"
+#include <iostream>
 
-int main(int argc, char const *argv[])
+int main()
 {
    photon::window test;
    auto root = test.getRoot();
@@ -9,5 +11,7 @@ int main(int argc, char const *argv[])
    insert.insertNode(insert2);
    root.insertNode(insert);
 
-   return 0;
+   photon::parser::parse("/run/media/sumitk/Alpha/Dev/Photon/test/example.html");
+
+   std::cin.get();
 }
