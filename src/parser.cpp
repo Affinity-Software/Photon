@@ -7,7 +7,6 @@
 
 using namespace photon;
 
-
 bool parser::validate_data(std::string data)
 {
    char letters[26] = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'};
@@ -145,7 +144,7 @@ void parser::get_dimensions(std::vector<attribute> attrs, int &height, int &widt
    }
 }
 
-void parser::fetch_starting_tag(std::string line, int index, globals& global)
+void parser::fetch_starting_tag(std::string line, int index, globals &global)
 {
    // its a starting tag
    std::string tagname;
@@ -187,7 +186,7 @@ void parser::fetch_starting_tag(std::string line, int index, globals& global)
    }
 }
 
-void parser::fetch_endtag(std::string search_string, globals& global)
+void parser::fetch_endtag(std::string search_string, globals &global)
 {
    size_t end;
    if (search_string.find('>') != std::string::npos)
@@ -199,7 +198,7 @@ void parser::fetch_endtag(std::string search_string, globals& global)
    global.openTags.pop_back();
 }
 
-void parser::fetch_data(std::string search_string, globals& global)
+void parser::fetch_data(std::string search_string, globals &global, bool recurse)
 {
 
    size_t dataStartAR = search_string.find('>') + 1;
@@ -210,23 +209,44 @@ void parser::fetch_data(std::string search_string, globals& global)
    else
       data = dataSearch.substr(0, dataSearch.find('<'));
 
-   if (!(global.openTags.empty()) && validate_data(data))
+   if (validate_data(data))
    {
-      if (global.current_line < global.data_parsed)
+      if (global.current_line > global.data_parsed)
       {
+         std::cout << "DATA: " << data << std::endl;
          global.data_parsed = global.current_line;
+
+         if (dataSearch.find('<') != std::string::npos)
+         {
+            bool stat1 = search_string[dataSearch.find('<') + dataStartAR + 1];
+            bool stat2 = search_string[dataSearch.find('<') + dataStartAR + 1] != '<';
+            bool stat3 = search_string[dataSearch.find('<') + dataStartAR + 1] != '/';
+            if (stat1 && (stat3))
+            {
+               fetch_data(search_string.substr(dataSearch.find('<') + dataStartAR + 1), global, true);
+            }
+         }
       }
 
-      else if (global.current_line > global.data_parsed)
+      else if (recurse)
       {
-         global.data_parsed = global.current_line;
+         std::cout << "DATA: " << data << std::endl;
+
+         if (dataSearch.find('<') != std::string::npos)
+         {
+            bool stat1 = search_string[dataSearch.find('<') + dataStartAR + 1];
+            bool stat2 = search_string[dataSearch.find('<') + dataStartAR + 1] != '<';
+            bool stat3 = search_string[dataSearch.find('<') + dataStartAR + 1] != '/';
+            if (stat1 && (stat3))
+            {
+               fetch_data(search_string.substr(dataSearch.find('<') + dataStartAR + 1), global, true);
+            }
+         }
       }
-
-
    }
 }
 
-void parser::encountered_dataORendtag(std::string line, int found, int dataEndPointAR, globals& global)
+void parser::encountered_dataORendtag(std::string line, int found, int dataEndPointAR, globals &global)
 {
    std::string search_string = line.substr(found + 1);
 
@@ -243,12 +263,12 @@ void parser::encountered_dataORendtag(std::string line, int found, int dataEndPo
       {
          // at this point we are clear that it is data (a part of it
          // since we are going with on char at a time)
-         fetch_data(search_string, global);
+         fetch_data(search_string, global, false);
       }
    }
 }
 
-void parser::fetch_line(std::string line, int dataEndPointAR, globals& global)
+void parser::fetch_line(std::string line, int dataEndPointAR, globals &global)
 {
    for (int found = 0; line[found]; found++)
    {
@@ -271,7 +291,7 @@ void parser::parse(std::string path)
 {
    globals global;
    global.current_line = 0;
-   global.data_parsed = NO_DATA_PARSED;
+   global.data_parsed = -1;
    std::string line;
    std::ifstream htmlFile(path);
    if (htmlFile.is_open())
@@ -285,5 +305,4 @@ void parser::parse(std::string path)
          fetch_line(line, dataEndPointAR, global);
       }
    }
-
 }

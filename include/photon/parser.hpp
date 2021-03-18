@@ -15,7 +15,7 @@ namespace photon
 
         struct globals
         {
-            unsigned int current_line;
+            int current_line;
             int data_parsed;
             std::vector<std::string> openTags;
         };
@@ -40,7 +40,7 @@ namespace photon
         int get_width(attribute attr);
         void fetch_starting_tag(std::string line, int index, globals& global);
         void fetch_endtag(std::string search_string, globals& global);
-        void fetch_data(std::string search_string, globals& global);
+        void fetch_data(std::string search_string, globals& global, bool recurse);
         void encountered_dataORendtag(std::string line, int found, int dataEndPointAR, globals& global);
         void fetch_line(std::string line, int dataEndPointAR, globals& global);
         void parse(std::string path);

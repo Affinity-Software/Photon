@@ -12,6 +12,4 @@ int main()
    root.insertNode(insert);
 
    photon::parser::parse("/run/media/sumitk/Alpha/Dev/Photon/test/example.html");
-
-   std::cin.get();
 }
