@@ -10,4 +10,6 @@ int main()
    photon::dom::node insert2;
    insert.insertNode(insert2);
    root.insertNode(insert);
+
+   photon::parser::parse("/run/media/sumitk/Alpha/Dev/Photon/test/example.html");
 }
