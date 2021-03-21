@@ -83,7 +83,6 @@ std::vector<parser::attribute> parser::fetch_attr(std::string line, int end, int
          attrs.push_back(attr);
          done_attrs++;
          parsed_attrs.push_back(name);
-         std::cout << "Attribute: " << name << "; Value: " << value << std::endl;
       }
    }
 
@@ -125,7 +124,6 @@ int parser::get_width(attribute attr)
 
 void parser::get_dimensions(std::vector<attribute> attrs, int &height, int &width)
 {
-
    for (attribute attr : attrs)
    {
       std::string attrName = attr.NAME;
@@ -162,7 +160,6 @@ void parser::fetch_starting_tag(std::string line, int index, globals &global)
       {
          // tag has attrs
          tagname = restoftheline.substr(0, restoftheline.find(' '));
-         std::cout << "Tag with tagname: " << tagname << "; has attrs" << std::endl;
 
          // since the tag has attributes we will also need to process them
          int start = restoftheline.find(' ') + 1;
@@ -173,13 +170,11 @@ void parser::fetch_starting_tag(std::string line, int index, globals &global)
    }
    else
    {
-
       // the tag dose not end in the line it starts
       if (end_tag == std::string::npos)
          tagname = restoftheline.substr(0);
       else
          tagname = restoftheline.substr(0, end_tag);
-      std::cout << "Tag with tagname: " << tagname << "; dose not has attrs" << std::endl;
    }
 
    global.openTags.push_back(tagname);
@@ -192,15 +187,13 @@ void parser::fetch_endtag(std::string search_string, globals &global)
       end = search_string.find('>');
    else
       end = 0;
-   std::string endtag = search_string.substr(1, end - 1);
 
-   std::cout << "Found an end tag for " << global.openTags[global.openTags.size() - 1] << '\n' << std::endl;
+   std::string endtag = search_string.substr(1, end - 1);
    global.openTags.pop_back();
 }
 
 void parser::fetch_data(std::string search_string, globals &global, bool recurse)
 {
-
    size_t dataStartAR = search_string.find('>') + 1;
    std::string dataSearch = search_string.substr(dataStartAR);
    std::string data;
@@ -213,7 +206,6 @@ void parser::fetch_data(std::string search_string, globals &global, bool recurse
    {
       if (global.current_line > global.data_parsed)
       {
-         std::cout << "DATA: " << data << std::endl;
          global.data_parsed = global.current_line;
 
          if (dataSearch.find('<') != std::string::npos)
@@ -229,8 +221,6 @@ void parser::fetch_data(std::string search_string, globals &global, bool recurse
 
       else if (recurse)
       {
-         std::cout << "DATA: " << data << std::endl;
-
          if (dataSearch.find('<') != std::string::npos)
          {
             bool stat1 = search_string[dataSearch.find('<') + dataStartAR + 1];
