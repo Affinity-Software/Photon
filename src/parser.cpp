@@ -26,7 +26,7 @@ bool parser::validate_data(std::string data)
    return false;
 }
 
-void parser::fetch_attr(std::string line, int end, int start, std::string tagname, std::vector<attribute> &refer)
+std::vector<parser::attribute> parser::fetch_attr(std::string line, int end, int start, std::string tagname)
 {
 
    std::vector<std::string> parsed_attrs;
@@ -83,10 +83,11 @@ void parser::fetch_attr(std::string line, int end, int start, std::string tagnam
          attrs.push_back(attr);
          done_attrs++;
          parsed_attrs.push_back(name);
+         std::cout << "Attribute: " << name << "; Value: " << value << std::endl;
       }
    }
 
-   refer = attrs;
+   return attrs;
 }
 
 int parser::get_height(attribute attr)
@@ -132,14 +133,13 @@ void parser::get_dimensions(std::vector<attribute> attrs, int &height, int &widt
 
       if (attrName == "style")
       {
-
          if (attr.VALUE.find("height") != std::string::npos)
             height = get_height(attr);
 
          if (attr.VALUE.find("width") != std::string::npos)
-         {
             width = get_width(attr);
-         }
+
+         break;
       }
    }
 }
@@ -151,6 +151,7 @@ void parser::fetch_starting_tag(std::string line, int index, globals &global)
    std::string restoftheline = line.substr(index + 1);
    size_t end_tag = restoftheline.find('>');
 
+   // *! the height and width variable are defined here
    int width = 0;
    int height = 0;
    size_t findAttrInit = restoftheline.find('=');
@@ -161,29 +162,27 @@ void parser::fetch_starting_tag(std::string line, int index, globals &global)
       {
          // tag has attrs
          tagname = restoftheline.substr(0, restoftheline.find(' '));
+         std::cout << "Tag with tagname: " << tagname << "; has attrs" << std::endl;
 
          // since the tag has attributes we will also need to process them
          int start = restoftheline.find(' ') + 1;
          int end = restoftheline.find('>') - 3;
-         std::vector<attribute> attrs;
-         fetch_attr(restoftheline, end, start, tagname, attrs);
-
-         // *! the height and width variable are defined here
+         std::vector<attribute> attrs = fetch_attr(restoftheline, end, start, tagname);
          get_dimensions(attrs, height, width);
       }
    }
    else
    {
+
       // the tag dose not end in the line it starts
-      tagname = restoftheline.substr(0, end_tag);
+      if (end_tag == std::string::npos)
+         tagname = restoftheline.substr(0);
+      else
+         tagname = restoftheline.substr(0, end_tag);
+      std::cout << "Tag with tagname: " << tagname << "; dose not has attrs" << std::endl;
    }
 
    global.openTags.push_back(tagname);
-
-   if (tagname == "h1")
-   {
-      // debugg
-   }
 }
 
 void parser::fetch_endtag(std::string search_string, globals &global)
@@ -194,7 +193,8 @@ void parser::fetch_endtag(std::string search_string, globals &global)
    else
       end = 0;
    std::string endtag = search_string.substr(1, end - 1);
-   endtag = end;
+
+   std::cout << "Found an end tag for " << global.openTags[global.openTags.size() - 1] << '\n' << std::endl;
    global.openTags.pop_back();
 }
 
@@ -219,7 +219,6 @@ void parser::fetch_data(std::string search_string, globals &global, bool recurse
          if (dataSearch.find('<') != std::string::npos)
          {
             bool stat1 = search_string[dataSearch.find('<') + dataStartAR + 1];
-            bool stat2 = search_string[dataSearch.find('<') + dataStartAR + 1] != '<';
             bool stat3 = search_string[dataSearch.find('<') + dataStartAR + 1] != '/';
             if (stat1 && (stat3))
             {
@@ -235,35 +234,11 @@ void parser::fetch_data(std::string search_string, globals &global, bool recurse
          if (dataSearch.find('<') != std::string::npos)
          {
             bool stat1 = search_string[dataSearch.find('<') + dataStartAR + 1];
-            bool stat2 = search_string[dataSearch.find('<') + dataStartAR + 1] != '<';
             bool stat3 = search_string[dataSearch.find('<') + dataStartAR + 1] != '/';
             if (stat1 && (stat3))
-            {
                fetch_data(search_string.substr(dataSearch.find('<') + dataStartAR + 1), global, true);
-            }
          }
-      }
-   }
-}
-
-void parser::encountered_dataORendtag(std::string line, int found, int dataEndPointAR, globals &global)
-{
-   std::string search_string = line.substr(found + 1);
-
-   // found a tag and since it cant be a start tag it has to be a end tag
-   if (line[found] == '<')
-   {
-      // found a endtag
-      fetch_endtag(search_string, global);
-   }
-
-   else
-   {
-      if (found > dataEndPointAR)
-      {
-         // at this point we are clear that it is data (a part of it
-         // since we are going with on char at a time)
-         fetch_data(search_string, global, false);
+      
       }
    }
 }
@@ -273,14 +248,16 @@ void parser::fetch_line(std::string line, int dataEndPointAR, globals &global)
    for (int found = 0; line[found]; found++)
    {
       bool startingtag = (line[found] == '<' && line[found + 1] != '/');
-      if (startingtag)
-      {
-         fetch_starting_tag(line, found, global);
-      }
+      bool endtag = line[found] == '<';
 
-      else
+      if (startingtag)
+         fetch_starting_tag(line, found, global);
+      else if (endtag)
+         fetch_endtag(line.substr(found + 1), global);
+      else // data
       {
-         encountered_dataORendtag(line, found, dataEndPointAR, global);
+         if (found > dataEndPointAR)
+            fetch_data(line.substr(found + 1), global, false);
       }
    }
 
@@ -296,13 +273,10 @@ void parser::parse(std::string path)
    std::ifstream htmlFile(path);
    if (htmlFile.is_open())
    {
-
       int dataEndPointAR = 0;
       std::string data;
 
       while (std::getline(htmlFile, line))
-      {
          fetch_line(line, dataEndPointAR, global);
-      }
    }
 }

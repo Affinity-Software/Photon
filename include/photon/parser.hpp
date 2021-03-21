@@ -35,7 +35,7 @@ namespace photon
             }
         };
 
-        void fetch_attr(std::string line, int end, int start, std::string tagname, std::vector<attribute> &refer);
+        std::vector<parser::attribute> fetch_attr(std::string line, int end, int start, std::string tagname);
         int get_height(attribute attr);
         int get_width(attribute attr);
         void fetch_starting_tag(std::string line, int index, globals& global);
