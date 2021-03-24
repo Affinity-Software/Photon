@@ -1,4 +1,5 @@
 #include "photon/parser.hpp"
+#include "dom.hpp"
 #include <iostream>
 #include <vector>
 #include <fstream>
@@ -207,7 +208,6 @@ void parser::fetch_data(std::string search_string, globals &global, bool recurse
       if (global.current_line > global.data_parsed)
       {
          global.data_parsed = global.current_line;
-
          if (dataSearch.find('<') != std::string::npos)
          {
             bool stat1 = search_string[dataSearch.find('<') + dataStartAR + 1];
@@ -217,6 +217,7 @@ void parser::fetch_data(std::string search_string, globals &global, bool recurse
                fetch_data(search_string.substr(dataSearch.find('<') + dataStartAR + 1), global, true);
             }
          }
+
       }
 
       else if (recurse)
@@ -243,11 +244,11 @@ void parser::fetch_line(std::string line, int dataEndPointAR, globals &global)
       if (startingtag)
          fetch_starting_tag(line, found, global);
       else if (endtag)
-         fetch_endtag(line.substr(found + 1), global);
+         fetch_endtag(line.substr(found), global);
       else // data
       {
-         if (found > dataEndPointAR)
-            fetch_data(line.substr(found + 1), global, false);
+         if (found > dataEndPointAR || dataEndPointAR == 0)
+            fetch_data(line.substr(found), global, false);
       }
    }
 
