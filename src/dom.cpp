@@ -4,6 +4,9 @@
 #include <mutex>
 #include <map>
 #include <unordered_map>
+#include <iostream>
+
+#include "photon/parser.hpp"
 
 #define NEGATIVE (-1)
 #define AFFIRMATIVE int 1
@@ -21,7 +24,10 @@ namespace photon::globals
 
 _dom::_dom()
 {
-   domObjects[nextid] = {0, {}, {}, 0, ""};
+   //type parent children callbacs tag
+   dom::nodeInternal node();
+
+   domObjects[nextid] = {dom::_type::_node, 0, {}, {}, {}, 0,""};
    nextid++;
 }
 
@@ -69,7 +75,7 @@ void _dom::deleteNodeRec(const dom::id &id)
    domObjects.erase(id);
 }
 
-dom::id _dom::createNode(const dom::id &parent, const std::string &tag, const std::string &data)
+dom::id _dom::createNode(const dom::id &parent, const std::string &tag,const std::map<dom::id,parser::attribute>& attributes)
 {
    auto temp = &globals::__tagNames__[tag];
    if (*temp)
@@ -77,7 +83,17 @@ dom::id _dom::createNode(const dom::id &parent, const std::string &tag, const st
       *temp = globals::__nextTagId__;
       globals::__nextTagId__++;
    }
-   domObjects[nextid] = {parent, {}, {}, *temp, data};
+
+   dom::nodeInternal node = {dom::_type::_node, parent, {}, {}, attributes, *temp, ""};
+   domObjects[nextid] = node;
+      _dom dom;
+   nextid++;
+   return nextid - 1;
+}
+
+dom::id _dom::crateTextNode(const dom::id& parent, const std::string& text) 
+{
+   domObjects[nextid] = {dom::_type::text,parent, {}, {}, {}, 0, text};
    nextid++;
    return nextid - 1;
 }
