@@ -184,7 +184,7 @@ void parser::fetch_starting_tag(std::string line, int index, globals &global)
    }
    else
    {
-      unsigned int id = global.dom.insertNode({dom::_type::_node, global.openTags.back().id, {}, {}, attrs, 0, tagname});
+      unsigned int id = global.dom.insertNode({dom::_type::_node, global.openTags.back().id, {}, {}, attrs, 0, ""});
       global.openTags.push_back({id, tagname});
    }
 }
