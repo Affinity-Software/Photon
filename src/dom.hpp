@@ -27,7 +27,7 @@ namespace photon
       void deleteNode(dom::node toDelete);
       void insertNode(const _dom &toinsert);
       dom::id insertNode(const dom::nodeInternal &toinsert);
-      dom::id createNode(const dom::id &parent, const std::string &tag,const std::map<dom::id,parser::attribute>& attributes);
+      dom::id createNode(const dom::id &parent, const std::string &tag,const std::map<std::string, std::string>& attributes);
       dom::id crateTextNode(const dom::id &parent, const std::string &text);
       std::vector<dom::id> getNodesByTag(const std::string &tag); //TODO implament this
       void loadFile(std::string path);

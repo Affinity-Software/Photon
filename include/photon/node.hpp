@@ -5,7 +5,6 @@
 #include <memory>
 #include <map>
 
-#include "parser.hpp"
 
 namespace photon{
    class _dom;
@@ -37,7 +36,7 @@ namespace photon::dom
       id parent;
       std::vector<id> children;
       std::vector<callback> callbacs;
-      std::map<dom::id,parser::attribute> atributes;
+      std::map<std::string, std::string> atributes;
       id tag;
       std::string text;
    };

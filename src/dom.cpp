@@ -75,7 +75,7 @@ void _dom::deleteNodeRec(const dom::id &id)
    domObjects.erase(id);
 }
 
-dom::id _dom::createNode(const dom::id &parent, const std::string &tag,const std::map<dom::id,parser::attribute>& attributes)
+dom::id _dom::createNode(const dom::id &parent, const std::string &tag,const std::map<std::string, std::string>& attributes)
 {
    auto temp = &globals::__tagNames__[tag];
    if (*temp)

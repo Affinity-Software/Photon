@@ -1,5 +1,4 @@
 #include "photon/parser.hpp"
-#include "dom.hpp"
 
 #include <iostream>
 #include <vector>
@@ -29,12 +28,12 @@ bool parser::validate_data(std::string data)
    return false;
 }
 
-std::map<unsigned int, parser::attribute> parser::fetch_attr(std::string line, int end, int start, globals &global)
+std::map<std::string, std::string> parser::fetch_attr(std::string line, int end, int start)
 {
    int _id = 0;
 
    std::vector<std::string> parsed_attrs;
-   std::map<unsigned int, attribute> attrs;
+   std::map<std::string, std::string> attrs;
 
    std::string searchString = line.substr(start, end);
    int count_attrs = 0;
@@ -79,8 +78,7 @@ std::map<unsigned int, parser::attribute> parser::fetch_attr(std::string line, i
             searchString = next;
          }
 
-         attribute attr(global._id, name, value);
-         attrs.insert({_id, attr});
+         attrs.insert({name, value});
          _id++;
          done_attrs++;
          parsed_attrs.push_back(name);
@@ -90,28 +88,11 @@ std::map<unsigned int, parser::attribute> parser::fetch_attr(std::string line, i
    return attrs;
 }
 
-int parser::get_height(attribute attr)
+int parser::get_height(std::string _value)
 {
-   int start = attr.VALUE.find("height") + 8;
-   std::string searchAR = attr.VALUE.substr(start);
-   std::string value = attr.VALUE.substr(start, searchAR.find(';') - 2);
-
-   try
-   {
-      return std::stoi(value);
-   }
-
-   catch (const std::exception &e)
-   {
-      return 0;
-   }
-}
-
-int parser::get_width(attribute attr)
-{
-   int start = attr.VALUE.find("width") + 7;
-   std::string searchAR = attr.VALUE.substr(start);
-   std::string value = attr.VALUE.substr(start, searchAR.find(';') - 2);
+   int start = _value.find("height") + 7;
+   std::string searchAR = _value.substr(start);
+   std::string value = _value.substr(start, searchAR.find(';') - 2);
 
    try
    {
@@ -123,19 +104,35 @@ int parser::get_width(attribute attr)
    }
 }
 
-void parser::get_dimensions(std::map<unsigned int, attribute> attrs, int &height, int &width)
+int parser::get_width(std::string _value)
+{
+   int start = _value.find("width") + 7;
+   std::string searchAR = _value.substr(start);
+   std::string value = _value.substr(start, searchAR.find(';') - 2);
+
+   try
+   {
+      return std::stoi(value);
+   }
+   catch (const std::exception &e)
+   {
+      return 0;
+   }
+}
+
+void parser::get_dimensions(std::map<std::string, std::string> attrs, int &height, int &width)
 {
    for (const auto attr : attrs)
    {
-      std::string attrName = attr.second.NAME;
+      std::string attrName = attr.first;
       std::transform(attrName.begin(), attrName.end(), attrName.begin(), ::tolower);
 
       if (attrName == "style")
       {
-         if (attr.second.VALUE.find("height") != std::string::npos)
+         if (attr.second.find("height") != std::string::npos)
             height = get_height(attr.second);
 
-         if (attr.second.VALUE.find("width") != std::string::npos)
+         if (attr.second.find("width") != std::string::npos)
             width = get_width(attr.second);
 
          break;
@@ -149,7 +146,7 @@ void parser::fetch_starting_tag(std::string line, int index, globals &global)
    std::string tagname;
    std::string restoftheline = line.substr(index + 1);
    size_t end_tag = restoftheline.find('>');
-   std::map<unsigned int, attribute> attrs;
+   std::map<std::string, std::string> attrs;
 
    // *! the height and width variable are defined here
    int width = 0;
@@ -166,7 +163,7 @@ void parser::fetch_starting_tag(std::string line, int index, globals &global)
          // since the tag has attributes we will also need to process them
          int start = restoftheline.find(' ') + 1;
          int end = restoftheline.find('>') - 3;
-         attrs = fetch_attr(restoftheline, end, start, global);
+         attrs = fetch_attr(restoftheline, end, start);
          global._id++;
          get_dimensions(attrs, height, width);
       }
@@ -180,15 +177,14 @@ void parser::fetch_starting_tag(std::string line, int index, globals &global)
          tagname = restoftheline.substr(0, end_tag);
    }
 
-   _dom dom;
    if (global.openTags.empty())
    {
-      unsigned int id = dom.createNode(0, tagname, attrs);
+      unsigned int id = global.dom.createNode(0, tagname, attrs);
       global.openTags.push_back({id, tagname});
    }
    else
    {
-      unsigned int id = dom.insertNode({dom::_type::_node, global.openTags.back().id, {}, {}, attrs, 0, ""});
+      unsigned int id = global.dom.insertNode({dom::_type::_node, global.openTags.back().id, {}, {}, attrs, 0, tagname});
       global.openTags.push_back({id, tagname});
    }
 }
@@ -270,6 +266,7 @@ void parser::parse(std::string path)
    globals global;
    global.current_line = 0;
    global.data_parsed = -1;
+   _dom dom;
    std::string line;
    std::ifstream htmlFile(path);
    if (htmlFile.is_open())
