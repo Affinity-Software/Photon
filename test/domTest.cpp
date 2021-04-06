@@ -1,6 +1,8 @@
 #include "photon/window.hpp"
+#include "photon/parser.hpp"
+#include <iostream>
 
-int main(int argc, char const *argv[])
+int main()
 {
    photon::window test;
    auto root = test.getRoot();
@@ -8,6 +10,4 @@ int main(int argc, char const *argv[])
    photon::dom::node insert2;
    insert.insertNode(insert2);
    root.insertNode(insert);
-
-   return 0;
 }
