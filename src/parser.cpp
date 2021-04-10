@@ -216,6 +216,10 @@ void parser::fetch_data(std::string search_string, globals &global, bool recurse
       if (global.current_line > global.data_parsed)
       {
          global.data_parsed = global.current_line;
+         
+         if (global.openTags.empty())global.dom.crateTextNode(0, data);
+         else global.dom.crateTextNode(global.openTags.back().id, data);
+         
          if (dataSearch.find('<') != std::string::npos)
          {
             bool stat1 = search_string[dataSearch.find('<') + dataStartAR + 1];
