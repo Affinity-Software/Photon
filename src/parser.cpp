@@ -149,12 +149,11 @@ void parser::fetch_starting_tag(std::string line, int index, globals &global)
    size_t end_tag = restoftheline.find('>');
    std::map<std::string, std::string> attrs;
 
-   // *! the height and width variable are defined here
-   int width = 0;
-   int height = 0;
+   // int width = 0;
+   // int height = 0;
    size_t findAttrInit = restoftheline.find('=');
 
-   if (findAttrInit != std::string::npos && end_tag != std::string::npos)
+   if (findAttrInit != std::string::npos)
    {
       if (findAttrInit < end_tag)
       {
@@ -166,7 +165,26 @@ void parser::fetch_starting_tag(std::string line, int index, globals &global)
          int end = restoftheline.find('>') - 3;
          attrs = fetch_attr(restoftheline, end, start);
          global._id++;
-         get_dimensions(attrs, height, width);
+         // get_dimensions(attrs, height, width);
+      }
+
+      if (line.find('>') == std::string::npos)
+      {
+
+         global.on_next_line = 'D';
+         if (global.openTags.empty())
+         {
+            global.pending_nodes.push_back({dom::_type::_node, 0, {}, {}, attrs, 0, ""});
+            global.openTags.push_back({0, tagname});
+         }
+
+         else
+         {
+            global.pending_nodes.push_back({dom::_type::_node, global.openTags.back().id, {}, {}, attrs, 0, ""});
+            global.openTags.push_back({global.openTags.back().id, tagname});
+         }
+
+         return;
       }
    }
    else
@@ -174,8 +192,7 @@ void parser::fetch_starting_tag(std::string line, int index, globals &global)
       // the tag dose not end in the line it starts
       if (end_tag == std::string::npos)
       {
-         tagname = restoftheline.substr(0);
-         //! THIS IS WHERE ITS SAYING TO THE PARSER THAT THERE ARE ATTRIBUTES ON THE NEXT LINE
+         tagname = restoftheline.substr(0, restoftheline.find(' '));
          global.on_next_line = 'D';
 
          if (global.openTags.empty())
@@ -285,10 +302,11 @@ void parser::fetch_line(std::string line, globals &global)
       {
          dom::nodeInternal node = global.pending_nodes.back();
          global.on_next_line = 'A';
-         if (global.openTags.size() == 1) global.dom.createNode(node.parent, global.openTags.back().tag, node.atributes);
-         else global.dom.insertNode({dom::_type::_node, global.openTags.back().id, {}, {}, node.atributes, 0, ""});
+         if (global.openTags.size() == 1)
+            global.dom.createNode(node.parent, global.openTags.back().tag, node.atributes);
+         else
+            global.dom.insertNode({dom::_type::_node, global.openTags.back().id, {}, {}, node.atributes, 0, ""});
       }
-
    }
 
    int last_starting_tag = 0;
@@ -328,11 +346,5 @@ void parser::parse(std::string path)
 
       while (std::getline(htmlFile, line))
          fetch_line(line, global);
-   }
-
-   for (auto attr : global.pending_nodes.back().atributes)
-   {
-      std::cout << "Name: " << attr.first << std::endl;
-      std::cout << "Value: " << attr.second << std::endl;
    }
 }
