@@ -29,6 +29,8 @@ namespace photon
             std::vector<node> openTags;
             int _id = 0; // tag_id
             _dom dom;
+            char on_next_line = 'A'; // * A -> CONTINUE AS NORMAL; D -> THERE ARE ATTRIBUTES ON THIS LINE
+            std::vector<dom::nodeInternal> pending_nodes;
         };
 
         class attribute
@@ -52,12 +54,11 @@ namespace photon
         void fetch_starting_tag(std::string line, int index, globals &global);
         void fetch_endtag(std::string search_string, globals &global);
         void fetch_data(std::string search_string, globals &global, bool recurse);
-        void encountered_dataORendtag(std::string line, int found, int dataEndPointAR, globals &global);
         void parse(std::string path);
-        void fetch_line(std::string line, int dataEndPointAR, globals &global);
+        void fetch_line(std::string line, globals &global);
         std::map<std::string, std::string> fetch_attr(std::string line, int end, int start);
 
         void get_dimensions(std::map<std::string, std::string> attrs, int &height, int &width);
-        bool validate_data(std::string data);
+        int validate_data(std::string data);
     }
 }

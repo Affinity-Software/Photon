@@ -9,23 +9,18 @@
 
 using namespace photon;
 
-bool parser::validate_data(std::string data)
+int parser::validate_data(std::string data)
 {
-   char letters[26] = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'};
-   for (char i : letters)
+   std::vector<char> letters = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j',
+                                'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'};
+   std::vector<char> ints = {'1', '2', '3', '4', '5', '6', '7', '8', '9', '0'};
+   for (int i = 0; data[i]; i++)
    {
-      if (data.find(i) != std::string::npos || data.find(std::toupper(i)) != std::string::npos)
-         return true;
+      if (std::find(letters.begin(), letters.end(), data[i]) != letters.end() ||
+          std::find(ints.begin(), ints.end(), data[i]) != ints.end())
+         return i;
    }
-
-   for (int i = 0; i < 10; i++)
-   {
-      char c = (char)i;
-      if (data.find(c) != std::string::npos)
-         return true;
-   }
-
-   return false;
+   return -1;
 }
 
 std::map<std::string, std::string> parser::fetch_attr(std::string line, int end, int start)
@@ -35,14 +30,20 @@ std::map<std::string, std::string> parser::fetch_attr(std::string line, int end,
    std::vector<std::string> parsed_attrs;
    std::map<std::string, std::string> attrs;
 
-   std::string searchString = line.substr(start, end);
+   std::string searchString = line.substr(start, line.find('>'));
    int count_attrs = 0;
    int done_attrs = 0;
 
    for (int i = 0; searchString[i]; i++)
    {
       if (searchString[i] == '=')
+      {
          count_attrs++;
+         if (searchString[i - 1] == ' ')
+            searchString.replace(i - 1, 1, "");
+         if (searchString[i + 1] == ' ')
+            searchString.replace(i + 1, 1, "");
+      }
    }
 
    for (int i = 0; searchString[i]; i++)
@@ -172,21 +173,43 @@ void parser::fetch_starting_tag(std::string line, int index, globals &global)
    {
       // the tag dose not end in the line it starts
       if (end_tag == std::string::npos)
+      {
          tagname = restoftheline.substr(0);
+         //! THIS IS WHERE ITS SAYING TO THE PARSER THAT THERE ARE ATTRIBUTES ON THE NEXT LINE
+         global.on_next_line = 'D';
+
+         if (global.openTags.empty())
+         {
+            global.pending_nodes.push_back({dom::_type::_node, 0, {}, {}, {}, 0, ""});
+            global.openTags.push_back({0, tagname});
+         }
+
+         else
+         {
+            global.pending_nodes.push_back({dom::_type::_node, global.openTags.back().id, {}, {}, {}, 0, ""});
+            global.openTags.push_back({global.openTags.back().id, tagname});
+         }
+
+         return;
+      }
       else
          tagname = restoftheline.substr(0, end_tag);
    }
 
+   unsigned int id;
+
    if (global.openTags.empty())
    {
-      unsigned int id = global.dom.createNode(0, tagname, attrs);
+      id = global.dom.createNode(0, tagname, attrs);
       global.openTags.push_back({id, tagname});
    }
    else
    {
-      unsigned int id = global.dom.insertNode({dom::_type::_node, global.openTags.back().id, {}, {}, attrs, 0, ""});
+      id = global.dom.insertNode({dom::_type::_node, global.openTags.back().id, {}, {}, attrs, 0, ""});
       global.openTags.push_back({id, tagname});
    }
+
+   std::cout << tagname << std::endl;
 }
 
 void parser::fetch_endtag(std::string search_string, globals &global)
@@ -211,15 +234,17 @@ void parser::fetch_data(std::string search_string, globals &global, bool recurse
    else
       data = dataSearch.substr(0, dataSearch.find('<'));
 
-   if (validate_data(data))
+   if (validate_data(data) != -1)
    {
       if (global.current_line > global.data_parsed)
       {
          global.data_parsed = global.current_line;
-         
-         if (global.openTags.empty())global.dom.crateTextNode(0, data);
-         else global.dom.crateTextNode(global.openTags.back().id, data);
-         
+
+         if (global.openTags.empty())
+            global.dom.crateTextNode(0, data);
+         else
+            global.dom.crateTextNode(global.openTags.back().id, data);
+
          if (dataSearch.find('<') != std::string::npos)
          {
             bool stat1 = search_string[dataSearch.find('<') + dataStartAR + 1];
@@ -244,20 +269,44 @@ void parser::fetch_data(std::string search_string, globals &global, bool recurse
    }
 }
 
-void parser::fetch_line(std::string line, int dataEndPointAR, globals &global)
+void parser::fetch_line(std::string line, globals &global)
 {
+
+   if (validate_data(line) != -1)
+   {
+      if (global.on_next_line == 'D')
+      {
+         std::map<std::string, std::string> attrs = fetch_attr(line.substr(validate_data(line)), line.find('>'), 0);
+         for (auto attr : attrs)
+            global.pending_nodes.back().atributes.insert({attr.first, attr.second});
+      }
+
+      if (line.find('>') != std::string::npos)
+      {
+         dom::nodeInternal node = global.pending_nodes.back();
+         global.on_next_line = 'A';
+         if (global.openTags.size() == 1) global.dom.createNode(node.parent, global.openTags.back().tag, node.atributes);
+         else global.dom.insertNode({dom::_type::_node, global.openTags.back().id, {}, {}, node.atributes, 0, ""});
+      }
+
+   }
+
+   int last_starting_tag = 0;
    for (int found = 0; line[found]; found++)
    {
       bool startingtag = (line[found] == '<' && line[found + 1] != '/');
       bool endtag = line[found] == '<';
 
       if (startingtag)
+      {
          fetch_starting_tag(line, found, global);
+         last_starting_tag = found;
+      }
       else if (endtag)
          fetch_endtag(line.substr(found), global);
-      else // data
+      else
       {
-         if (found > dataEndPointAR || dataEndPointAR == 0)
+         if (last_starting_tag < found && found > line.find(">")) // data
             fetch_data(line.substr(found), global, false);
       }
    }
@@ -275,10 +324,15 @@ void parser::parse(std::string path)
    std::ifstream htmlFile(path);
    if (htmlFile.is_open())
    {
-      int dataEndPointAR = 0;
       std::string data;
 
       while (std::getline(htmlFile, line))
-         fetch_line(line, dataEndPointAR, global);
+         fetch_line(line, global);
+   }
+
+   for (auto attr : global.pending_nodes.back().atributes)
+   {
+      std::cout << "Name: " << attr.first << std::endl;
+      std::cout << "Value: " << attr.second << std::endl;
    }
 }
