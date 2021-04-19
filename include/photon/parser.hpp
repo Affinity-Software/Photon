@@ -56,7 +56,7 @@ namespace photon
         void fetch_data(std::string search_string, globals &global, bool recurse);
         void parse(std::string path);
         void fetch_line(std::string line, globals &global);
-        std::map<std::string, std::string> fetch_attr(std::string line, int end, int start);
+        std::map<std::string, std::string> fetch_attr(std::string line, int start);
 
         void get_dimensions(std::map<std::string, std::string> attrs, int &height, int &width);
         int validate_data(std::string data);

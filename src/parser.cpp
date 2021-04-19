@@ -23,7 +23,7 @@ int parser::validate_data(std::string data)
    return -1;
 }
 
-std::map<std::string, std::string> parser::fetch_attr(std::string line, int end, int start)
+std::map<std::string, std::string> parser::fetch_attr(std::string line, int start)
 {
    int _id = 0;
 
@@ -162,8 +162,7 @@ void parser::fetch_starting_tag(std::string line, int index, globals &global)
 
          // since the tag has attributes we will also need to process them
          int start = restoftheline.find(' ') + 1;
-         int end = restoftheline.find('>') - 3;
-         attrs = fetch_attr(restoftheline, end, start);
+         attrs = fetch_attr(restoftheline, start);
          global._id++;
          // get_dimensions(attrs, height, width);
       }
@@ -217,7 +216,7 @@ void parser::fetch_starting_tag(std::string line, int index, globals &global)
 
    if (global.openTags.empty())
    {
-      id = global.dom.createNode(0, tagname, attrs);
+      id = global.dom.createNode(0, "", attrs);
       global.openTags.push_back({id, tagname});
    }
    else
@@ -225,8 +224,6 @@ void parser::fetch_starting_tag(std::string line, int index, globals &global)
       id = global.dom.insertNode({dom::_type::_node, global.openTags.back().id, {}, {}, attrs, 0, ""});
       global.openTags.push_back({id, tagname});
    }
-
-   std::cout << tagname << std::endl;
 }
 
 void parser::fetch_endtag(std::string search_string, globals &global)
@@ -289,28 +286,30 @@ void parser::fetch_data(std::string search_string, globals &global, bool recurse
 void parser::fetch_line(std::string line, globals &global)
 {
 
-   if (validate_data(line) != -1)
+   if (validate_data(line) != -1 && !global.pending_nodes.empty())
    {
       if (global.on_next_line == 'D')
       {
-         std::map<std::string, std::string> attrs = fetch_attr(line.substr(validate_data(line)), line.find('>'), 0);
+         std::map<std::string, std::string> attrs = fetch_attr(line.substr(validate_data(line)), 0);
          for (auto attr : attrs)
             global.pending_nodes.back().atributes.insert({attr.first, attr.second});
-      }
 
-      if (line.find('>') != std::string::npos)
-      {
-         dom::nodeInternal node = global.pending_nodes.back();
-         global.on_next_line = 'A';
-         if (global.openTags.size() == 1)
-            global.dom.createNode(node.parent, global.openTags.back().tag, node.atributes);
-         else
-            global.dom.insertNode({dom::_type::_node, global.openTags.back().id, {}, {}, node.atributes, 0, ""});
+         if (line.find('>') != std::string::npos)
+         {
+            dom::nodeInternal node = global.pending_nodes.back();
+            global.on_next_line = 'A';
+            if (global.openTags.size() == 1)
+               global.dom.createNode(node.parent, global.openTags.back().tag, node.atributes);
+            else
+               global.dom.insertNode({dom::_type::_node, global.openTags.back().id, {}, {}, node.atributes, 0, ""});
+
+            global.pending_nodes.pop_back();
+         }
       }
    }
 
-   int last_starting_tag = 0;
-   for (int found = 0; line[found]; found++)
+   long unsigned int last_starting_tag = 0;
+   for (long unsigned int found = 0; line[found]; found++)
    {
       bool startingtag = (line[found] == '<' && line[found + 1] != '/');
       bool endtag = line[found] == '<';
