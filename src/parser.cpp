@@ -214,16 +214,9 @@ void parser::fetch_starting_tag(std::string line, int index, globals &global)
 
    unsigned int id;
 
-   if (global.openTags.empty())
-   {
-      id = global.dom.createNode(0, "", attrs);
-      global.openTags.push_back({id, tagname});
-   }
-   else
-   {
-      id = global.dom.insertNode({dom::_type::_node, global.openTags.back().id, {}, {}, attrs, 0, ""});
-      global.openTags.push_back({id, tagname});
-   }
+   if (global.openTags.empty()) id = global.dom.createNode(0, "", attrs);
+   else id = global.dom.insertNode({dom::_type::_node, global.openTags.back().id, {}, {}, attrs, 0, ""});
+   if (tagname != "img") global.openTags.push_back({id, tagname});
 }
 
 void parser::fetch_endtag(std::string search_string, globals &global)
