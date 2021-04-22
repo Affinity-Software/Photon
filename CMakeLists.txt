@@ -14,7 +14,7 @@ set(CMAKE_CXX_STANDARD 17)
 
 file(GLOB_RECURSE photonSrc src/*.cpp)
 add_library(photonGui STATIC ${photonSrc})
-target_link_libraries(photonGui glfw libglew_static)
+target_link_libraries(photonGui glfw libglew_static glm)
 target_include_directories(photonGui PUBLIC include)
 target_include_directories(photonGui PUBLIC src)
 target_compile_definitions(photonGui PUBLIC "$<$<CONFIG:DEBUG>:DEBUG>")

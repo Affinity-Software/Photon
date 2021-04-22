@@ -1,3 +1,6 @@
+#pragma once
+
+#include <glm/glm.hpp>
 namespace photon
 {
    struct style
@@ -6,16 +9,13 @@ namespace photon
       {
          struct side
          {
-            int width;
-            int color;
+            float width;
+            glm::vec4 color;
          };
          side top,right,bottom,left;
-         struct radius
-         {
-            int x,y;
-         };
-         radius topLeft,bottomLeft,bottomRight,topRight;
+         glm::vec2 topLeft,bottomLeft,bottomRight,topRight;
       };
+      border border;
       enum layout{
          inline_,
          block,
@@ -31,7 +31,9 @@ namespace photon
       {
          int top, left, bottom, right;
       };
-      space margin,padding;
+      space margin;
+      space padding;
+      glm::vec4 bgColor;
    };
    
 

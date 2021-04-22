@@ -1,11 +1,13 @@
 #include "photon/window.hpp"
 #include "dom.hpp"
+#include "renderer/renderer.hpp"
 
 #include <GLFW/glfw3.h>
 
 #include <thread>
 #include <atomic>
 #include <iostream>
+#include <exception>
 
 using namespace photon;
 struct window::impl
@@ -16,7 +18,8 @@ struct window::impl
 	std::shared_ptr<_dom> dom;
 };
 
-static void renderLoop(std::atomic<bool>& runing);
+//this function comes from renderLoop.cpp
+void renderLoop(std::atomic<bool>& runing, GLFWwindow* window);
 
 unsigned int window::impl::windowCount = 0;
 
@@ -25,10 +28,16 @@ window::window()
 	pimpl = new impl;
 	if(pimpl->windowCount == 0)
 		if(!glfwInit())
-			throw "failed to initialize glfw";
+			throw std::system_error();
 	pimpl->windowCount++;
 	pimpl->threadRuning = true;
-	pimpl->rendererThread = std::thread(renderLoop, std::ref(pimpl->threadRuning));
+	/* Create a windowed mode window and its OpenGL context */
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR,2);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR,1);
+	GLFWwindow* window = glfwCreateWindow(640, 480, "Hello World", NULL, NULL);
+	if (!window)
+		throw std::system_error();
+	pimpl->rendererThread = std::thread(renderLoop, std::ref(pimpl->threadRuning),window);
 	pimpl->dom = std::make_shared<_dom>();
 }
 
@@ -40,36 +49,6 @@ window::~window()
 	if(pimpl->windowCount == 0)
 		glfwTerminate();
 	delete pimpl;
-}
-
-
-static void renderLoop(std::atomic<bool>& runing){
-	GLFWwindow* window;
-
-	/* Create a windowed mode window and its OpenGL context */
-	window = glfwCreateWindow(640, 480, "Hello World", NULL, NULL);
-	if (!window)
-	{
-		return;
-	}
-
-	/* Make the window's context current */
-	glfwMakeContextCurrent(window);
-	glfwSwapInterval(1);
-
-	/* Loop until the user closes the window */
-	while (!glfwWindowShouldClose(window) && runing)
-	{
-			/* Render here */
-			glClear(GL_COLOR_BUFFER_BIT);
-
-			/* Swap front and back buffers */
-			glfwSwapBuffers(window);
-
-			/* Poll for and process events */
-			glfwPollEvents();
-	}
-	glfwDestroyWindow(window);
 }
 
 dom::node window::getRoot(){

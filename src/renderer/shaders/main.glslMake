@@ -1,0 +1,9 @@
+input position
+input localCord
+input borderRounding[4]
+input borderWith[4]
+input borderColor[4]
+input color
+uniform mvp
+file main.frag
+file main.vert
