@@ -1,11 +1,9 @@
 input position
-input color
 input localCord
-input topLeftRound
-input topRightRound
-input bottomLeftRound
-input bottomRightRound
-input borderColor
+input borderRounding[4]
+input borderWith[4]
+input borderColor[4]
+input color
 uniform mvp
 file main.frag
 file main.vert

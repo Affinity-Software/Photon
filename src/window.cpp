@@ -32,6 +32,8 @@ window::window()
 	pimpl->windowCount++;
 	pimpl->threadRuning = true;
 	/* Create a windowed mode window and its OpenGL context */
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR,2);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR,1);
 	GLFWwindow* window = glfwCreateWindow(640, 480, "Hello World", NULL, NULL);
 	if (!window)
 		throw std::system_error();

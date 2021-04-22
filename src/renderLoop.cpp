@@ -1,5 +1,6 @@
 //thi file only export a single function to window.cpp
 #include <atomic>
+#include <iostream>
 
 #include "glHelper.hpp"
 #include "renderer/renderer.hpp"
@@ -136,6 +137,12 @@ void renderLoop(std::atomic<bool>& runing, GLFWwindow* window)
 	glfwSwapInterval(1);
 	if(glewInit() != GLEW_OK)
 		throw std::system_error();
+
+	/* std::cout << glGetString(GL_VENDOR) << std::endl;
+	std::cout << glGetString(GL_RENDERER) << std::endl;
+	std::cout << glGetString(GL_VERSION) << std::endl;
+	std::cout << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
+	std::cout << glGetString(GL_EXTENSIONS) << std::endl; */
 
 	userPointerData upd;
 	glfwSetWindowUserPointer(window,&upd);

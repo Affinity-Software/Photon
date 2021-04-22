@@ -31,7 +31,8 @@ namespace photon
       {
          int top, left, bottom, right;
       };
-      space margin,padding;
+      space margin;
+      space padding;
       glm::vec4 bgColor;
    };
    

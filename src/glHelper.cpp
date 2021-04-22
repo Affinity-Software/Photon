@@ -34,7 +34,7 @@ void checkGlError(const std::string& file, const int line)
     {
         if(err != GL_NO_ERROR)
         {
-            std::cout << "[ERROR] [opengl] in file " << file<< " at line " << line << " with code "<< err << " " <<  glErorTostring(err) << std::endl;
+            std::cerr << "[ERROR] [opengl] in file " << file<< " at line " << line << " with code "<< err << " " <<  glErorTostring(err) << std::endl;
             assert(true);
         }
     }

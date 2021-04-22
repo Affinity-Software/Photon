@@ -6,6 +6,7 @@
 #include <vector>
 #include <memory>
 #include <algorithm>
+#include <type_traits>
 
 namespace photon::renderer
 {
@@ -35,6 +36,7 @@ namespace photon::renderer
       void bind() const;
       void unbind() const;
       int getIndexCount() const;
+      bool strideCheck(size_t size);
    };
    
 
@@ -43,10 +45,33 @@ struct vertexDataSpec
    GLint size;
    GLenum type;
    GLboolean normalised;
-   size_t byteSize;
+   size_t typeSize;
+   size_t arraySize;
 };
 
 template<typename T> vertexDataSpec typeToSpec();
+
+//code from stack overflow https://stackoverflow.com/a/16337657/13248064
+
+template<typename>
+struct is_std_array : std::false_type {};
+
+template<typename T, size_t A>
+struct is_std_array<std::array<T,A>> : std::true_type {};
+
+template<typename T> vertexDataSpec arrayTypeToSpec()
+{
+   if constexpr(is_std_array<T>::value)
+   {
+      auto temp = typeToSpec<std::remove_reference_t<decltype(*std::begin(std::declval<T&>()))>>();
+      temp.arraySize = std::tuple_size<T>::value;
+      return temp;
+   }
+   else
+   {
+      return typeToSpec<T>();
+   }
+}
 
 template<typename... T>
 mesh<T...>::mesh()
@@ -58,25 +83,30 @@ mesh<T...>::mesh()
    ibId = bufers[1];
 
    // setup vertex buffer based on templet
-   const std::vector<vertexDataSpec> vdc = {typeToSpec<T>()...};
+   const std::vector<vertexDataSpec> vdc = {arrayTypeToSpec<T>()...};
    GLC(glBindBuffer(GL_ARRAY_BUFFER,vbId));
 
    GLint stride = 0;
-   for(auto& i : vdc) stride += i.size * i.byteSize;
+   for(auto& i : vdc) stride += i.size * i.typeSize * i.arraySize;
    vertexSize = stride;
    GLintptr byteOfset = 0;
+   size_t index = 0;
    for(size_t i = 0; i < vdc.size();i++)
    {
-      GLC(glEnableVertexAttribArray(i));
-      GLC(glVertexAttribPointer(
-         i,
-         vdc[i].size,
-         vdc[i].type,
-         vdc[i].normalised,
-         vertexSize,
-         (void*)byteOfset
-      ));
-      byteOfset += vdc[i].size * vdc[i].byteSize; 
+      for(size_t j = 0; j < vdc[i].arraySize; j++)
+      {
+         GLC(glEnableVertexAttribArray(index));
+         GLC(glVertexAttribPointer(
+            index,
+            vdc[i].size,
+            vdc[i].type,
+            vdc[i].normalised,
+            vertexSize,
+            (void*)byteOfset
+         ));
+         index++;
+         byteOfset += vdc[i].size * vdc[i].typeSize; 
+      }
    }
 }
 
@@ -125,6 +155,12 @@ template<typename... T>
 int mesh<T...>::getIndexCount() const
 {
    return ibSize;
+}
+
+template<typename... T>
+bool mesh<T...>::strideCheck(size_t size)
+{
+   return vertexSize == size;
 }
 
 }
