@@ -2,6 +2,32 @@
 
 using namespace photon;
 
+std::vector<std::string> cssparser::fetch_selectors(std::string selector_string)
+{
+    std::vector<std::string> selectors;
+    for (int i=0; selector_string[i]; i++)
+    {
+        if (selector_string[i] == ' ' && selector_string[i + 1] == '+')
+            selector_string.replace(i, 1, "");
+        
+        if (selector_string[i] == ' ' && i > 0)
+        {
+            if (selector_string[i - 1] == '+') selector_string.replace(i, 1, "");
+        }
+    }
+
+    size_t not_found = -1;
+    while (validate_file(selector_string) != not_found)
+    {
+        std::string selector = selector_string.substr(0, selector_string.find(' '));
+        selector_string.replace(0, selector_string.find(' '), "");
+        if (validate_file(selector_string) != -1) 
+            selector_string.replace(0, validate_file(selector_string), "");
+        selectors.push_back(selector);
+    }
+    return selectors;
+}
+
 std::map<std::string, std::string> cssparser::props(std::string content)
 {
 
@@ -78,14 +104,14 @@ void cssparser::parse(std::string path)
                 selector.replace(i, 1, "");
         }
 
-        std::cout << selector << std::endl;
+        fetch_selectors(selector);
 
-        size_t content_start = file.find('{') + 2;
+        size_t content_start = file.find('{');
         size_t content_end = file.find('}');
 
-        if (file[file.find('}') + 2]) content_end -= 7;
+        //if (file[file.find('}') + 2]) content_end -= 7;
 
-        std::string content = file.substr(content_start, content_end);
+        std::string content = file.substr(content_start + 1, content_end - content_start -1);
         std::map<std::string, std::string> prop = props(content);
         file.replace(0, file.find('}'), "");
     }

@@ -7,3 +7,8 @@ div
 {
     color: white;
 }
+
+div + div
+{
+    color: blue;
+}

@@ -94,5 +94,6 @@ namespace photon
         std::map<std::string, std::string> props(std::string content);
         size_t validate_file(std::string file);
         void parse(std::string path);
+        std::vector<std::string> fetch_selectors(std::string selector_string);
     }
 }
