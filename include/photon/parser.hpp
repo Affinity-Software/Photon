@@ -6,6 +6,7 @@
 #include <string>
 #include <map>
 #include <algorithm>
+#include <unordered_map>
 
 #include "dom.hpp"
 
@@ -60,5 +61,38 @@ namespace photon
 
         void get_dimensions(std::map<std::string, std::string> attrs, int &height, int &width);
         int validate_data(std::string data);
+    }
+
+    namespace cssparser
+    {
+        enum tag:int
+        {
+            with,height,border,border_with,border_color
+        };
+
+        struct Selector{
+            //TODO: finish enums
+            enum Type{
+                tagName,
+                className,
+                id
+            };
+            Type type;
+            std::string value;
+            enum Relation{
+                children,
+                directChildren
+            };
+            Relation relation;
+        };
+
+        struct qery{
+            std::vector<Selector> selector;
+            std::unordered_map<int,float> tags;
+        };
+        
+        std::map<std::string, std::string> props(std::string content);
+        size_t validate_file(std::string file);
+        void parse(std::string path);
     }
 }

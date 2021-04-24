@@ -35,6 +35,8 @@ program::program(const std::string& shaderMakeFilePath)
 		std::string temp;
 		temp.resize(size);
 		file.read(&temp[0],size);
+
+		
 		if(i.rfind(".vert") != std::string::npos)
 			vsSrc.push_back(temp);
 		else if(i.rfind(".frag") != std::string::npos)

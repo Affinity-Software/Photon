@@ -4,12 +4,5 @@
 
 int main()
 {
-   photon::window test;
-   auto root = test.getRoot();
-   photon::dom::node insert;
-   photon::dom::node insert2;
-   insert.insertNode(insert2);
-   root.insertNode(insert);
-
-   photon::parser::parse("/home/programming/Documents/Photon/test/example.html");
+   photon::cssparser::parse("/home/programming/Documents/Projects/Photon/test/test.css");
 }
