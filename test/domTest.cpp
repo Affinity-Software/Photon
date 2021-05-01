@@ -4,5 +4,5 @@
 
 int main()
 {
-   photon::cssparser::parse("/home/misi/Documents/dev/cpp/Photon/test/test.css");
+   photon::cssparser::parse("/home/programming/Documents/Projects/Photon/test/test.css");
 }

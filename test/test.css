@@ -1,11 +1,12 @@
 body
 {
-    color: black;
+    color: black 1px;
     text-align: center;
 }
 div
 {
     color: white;
+    border-width: 5px 10px 15px 20px;
 }
 
 div + div

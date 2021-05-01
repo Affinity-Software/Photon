@@ -7,6 +7,7 @@
 #include <map>
 #include <algorithm>
 #include <unordered_map>
+#include "cssPreoperties.hpp"
 
 #include "dom.hpp"
 
@@ -65,33 +66,48 @@ namespace photon
 
     namespace cssparser
     {
-        enum tag:int
+        enum tag : int
         {
-            with,height,border,border_with,border_color
+            with,
+            height,
+            border,
+            border_with,
+            border_color
         };
 
-        struct Selector{
+        struct Selector
+        {
             //TODO: finish enums
-            enum Type{
+            enum Type
+            {
                 tagName,
                 className,
                 id
             };
             Type type;
             std::string value;
-            enum Relation{
+            enum Relation
+            {
                 children,
                 directChildren
             };
             Relation relation;
         };
 
-        struct qery{
+        struct qery
+        {
             std::vector<Selector> selector;
-            std::unordered_map<int,float> tags;
+            std::unordered_map<int, float> tags;
         };
-        
-        std::map<std::string, std::string> props(std::string content);
+
+        struct definition
+        {
+            properties property;
+            std::vector<std::string> short_hands; 
+        };
+
+        std::vector<std::string> short_hands(std::string value);
+        std::vector<definition> props(std::string content);
         size_t validate_file(std::string file);
         void parse(std::string path);
         std::vector<std::string> fetch_selectors(std::string selector_string);
