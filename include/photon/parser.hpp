@@ -106,10 +106,16 @@ namespace photon
             std::vector<std::string> short_hands; 
         };
 
+        struct style
+        {
+            Selector selector;
+            std::vector<definition> props;
+        };
+
         std::vector<std::string> short_hands(std::string value);
         std::vector<definition> props(std::string content);
         size_t validate_file(std::string file);
-        void parse(std::string path);
+        std::vector<style> parse(std::string path);
         std::vector<std::string> fetch_selectors(std::string selector_string);
     }
 }

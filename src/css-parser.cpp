@@ -458,7 +458,8 @@ std::vector<cssparser::definition> cssparser::props(std::string content)
         value.replace(0, validate_file(value), "");
         for (int i = 0; prop[i]; i++)
         {
-            if (prop[i] == '-') prop.replace(i, 1, "-");
+            if (prop[i] == '-')
+                prop.replace(i, 1, "-");
         }
         auto it = propertyLocations.find(prop);
         if (it == propertyLocations.end())
@@ -494,8 +495,11 @@ size_t cssparser::validate_file(std::string file)
     return -1;
 }
 
-void cssparser::parse(std::string path)
+std::vector<cssparser::style> cssparser::parse(std::string path)
 {
+
+    std::vector<style> result;
+
     std::string line;
     std::ifstream cssfile(path);
     if (!cssfile.is_open())
@@ -517,20 +521,49 @@ void cssparser::parse(std::string path)
         // Remove the indentation of the file
         file.replace(0, startingPoint, "");
 
-        std::string selector = file.substr(0, file.find('{'));
-        for (int i = 0; selector[i]; i++)
+        std::string selector_string = file.substr(0, file.find('{'));
+        for (int i = 0; selector_string[i]; i++)
         {
-            if (selector[i] == '\n')
-                selector.replace(i, 1, "");
+            if (selector_string[i] == '\n')
+                selector_string.replace(i, 1, "");
         }
 
-        fetch_selectors(selector);
-
+        std::vector<std::string> selectors = fetch_selectors(selector_string);
         size_t content_start = file.find('{');
         size_t content_end = file.find('}');
 
         std::string content = file.substr(content_start + 1, content_end - content_start - 1);
         std::vector<definition> prop = props(content);
+
+        for (auto i : selectors)
+        {
+            if (i[0] == '.')
+            {
+                if (i.find('>') == std::string::npos)
+                    result.push_back({{Selector::Type::className, i, Selector::Relation::children}, prop});
+                else
+                    result.push_back({{Selector::Type::className, i, Selector::Relation::directChildren}, prop});
+            }
+
+            else if (i[0] == '#')
+            {
+                if (i.find('>') == std::string::npos)
+                    result.push_back({{Selector::Type::id, i, Selector::Relation::children}, prop});
+                else
+                    result.push_back({{Selector::Type::id, i, Selector::Relation::directChildren}, prop});
+            }
+
+            else
+            {
+                if (i.find('>') == std::string::npos)
+                    result.push_back({{Selector::Type::tagName, i, Selector::Relation::children}, prop});
+                else
+                    result.push_back({{Selector::Type::tagName, i, Selector::Relation::directChildren}, prop});
+            }
+        }
+        // result.push_back({{}, prop});
         file.replace(0, file.find('}'), "");
     }
+
+    return result;
 }
