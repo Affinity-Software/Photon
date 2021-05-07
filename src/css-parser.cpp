@@ -37,7 +37,8 @@ std::vector<std::string> cssparser::fetch_selectors(std::string selector_string)
     {
         std::string selector = selector_string.substr(0, selector_string.find(' '));
         selector_string.replace(0, selector_string.find(' '), "");
-        if (validate_file(selector_string) != -1)
+	size_t not_found = -1;
+        if (validate_file(selector_string) != not_found)
             selector_string.replace(0, validate_file(selector_string), "");
         selectors.push_back(selector);
     }
