@@ -319,7 +319,7 @@ void parser::fetch_line(std::string line, globals &global)
    global.current_line++;
 }
 
-std::tuple<std::shared_ptr<_dom>, std::map<unsigned int, std::string>> parser::parse(std::string path)
+std::shared_ptr<_dom> parser::parse(std::string path)
 {
    globals global;
    global.current_line = 0;
@@ -335,7 +335,7 @@ std::tuple<std::shared_ptr<_dom>, std::map<unsigned int, std::string>> parser::p
          fetch_line(line, global);
    }
 
-   return {global.dom,global.elements};
+   return global.dom;
 }
 
 void parser::insert_node (unsigned int id, std::string tagname, 

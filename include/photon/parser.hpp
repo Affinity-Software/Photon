@@ -60,7 +60,7 @@ namespace photon
         void fetch_starting_tag(std::string line, int index, globals &global);
         void fetch_endtag(std::string search_string, globals &global);
         void fetch_data(std::string search_string, globals &global, bool recurse);
-        std::tuple<std::shared_ptr<_dom>, std::map<unsigned int, std::string>> parse(std::string path);
+        std::shared_ptr<_dom> parse(std::string path);
         void fetch_line(std::string line, globals &global);
         std::map<std::string, std::string> fetch_attr(std::string line, int start);
         void insert_node(unsigned int id, std::string tagname, std::map<std::string, std::string> attrs, globals &global);
