@@ -60,6 +60,6 @@ dom::node window::getRoot(){
 
 void window::loadHtml(std::filesystem::path path)
 {
-	auto [pimpl->dom , temp] = parser::parse(path);
-	
+	auto [tempdom, temp] = parser::parse(path);
+	pimpl->dom = tempdom;
 }
