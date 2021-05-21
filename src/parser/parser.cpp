@@ -270,26 +270,29 @@ void parser::fetch_data(std::string search_string, globals &global, bool recurse
 void parser::fetch_line(std::string line, globals &global)
 {
 
+   // the line is not empty and there is a incomplete node
    if (validate_data(line) != -1 && !global.pending_nodes.empty())
    {
-      if (global.on_next_line == 'D')
+      // gets any attributes that are on a new line
+      std::map<std::string, std::string> attrs = fetch_attr(line.substr(validate_data(line)), 0);
+      
+      // appends those attributes to the ones that were already parsed
+      for (auto attr : attrs) 
+         global.pending_nodes.back().attributes.insert({attr.first, attr.second});
+
+      // if the tag ends on this line
+      if (line.find('>') != std::string::npos) 
       {
-         std::map<std::string, std::string> attrs = fetch_attr(line.substr(validate_data(line)), 0);
-         for (auto attr : attrs)
-            global.pending_nodes.back().attributes.insert({attr.first, attr.second});
+         // the tag has ended
+         global.on_next_line = 'A';
 
-         if (line.find('>') != std::string::npos)
-         {
-            // dom::nodeInternal node = {dom::_type::_node, global.pending_nodes.back().parent, {},
-            // {}, global.pending_nodes.back().attributes, };
-            global.on_next_line = 'A';
+         // create a node and get its id
+         unsigned int id = global.dom->createNode(global.pending_nodes.back().parent, global.pending_nodes.back().tag,
+         global.pending_nodes.back().attributes);
 
-            unsigned int id = global.dom->createNode(global.pending_nodes.back().parent, global.pending_nodes.back().tag,
-            global.pending_nodes.back().attributes);
-
-            global.elements.insert({id, global.openTags.back().tag});
-            global.pending_nodes.pop_back();
-         }
+         // add it to the vector of nodes
+         global.elements.insert({id, global.openTags.back().tag});
+         global.pending_nodes.pop_back();
       }
    }
 
