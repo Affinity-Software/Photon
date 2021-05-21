@@ -7,7 +7,8 @@
 #include <map>
 #include <algorithm>
 #include <unordered_map>
-#include "cssPreoperties.hpp"
+#include <memory>
+#include "parser/cssPreoperties.hpp"
 
 #include "dom.hpp"
 
@@ -20,8 +21,10 @@ namespace photon
 
         struct node
         {
-            unsigned int id = 0;
+            unsigned int id;
+            unsigned int parent;
             std::string tag;
+            std::map<std::string, std::string> attributes;
         };
 
         struct globals
@@ -30,9 +33,10 @@ namespace photon
             int data_parsed;
             std::vector<node> openTags;
             int _id = 0; // tag_id
-            _dom dom;
+            std::shared_ptr<_dom> dom;
             char on_next_line = 'A'; // * A -> CONTINUE AS NORMAL; D -> THERE ARE ATTRIBUTES ON THIS LINE
-            std::vector<dom::nodeInternal> pending_nodes;
+            std::vector<node> pending_nodes;
+            std::map<unsigned int, std::string> elements;
         };
 
         class attribute
@@ -56,9 +60,10 @@ namespace photon
         void fetch_starting_tag(std::string line, int index, globals &global);
         void fetch_endtag(std::string search_string, globals &global);
         void fetch_data(std::string search_string, globals &global, bool recurse);
-        void parse(std::string path);
+        std::tuple<std::shared_ptr<_dom>, std::map<unsigned int, std::string>> parse(std::string path);
         void fetch_line(std::string line, globals &global);
         std::map<std::string, std::string> fetch_attr(std::string line, int start);
+        void insert_node(unsigned int id, std::string tagname, std::map<std::string, std::string> attrs, globals &global);
 
         void get_dimensions(std::map<std::string, std::string> attrs, int &height, int &width);
         int validate_data(std::string data);

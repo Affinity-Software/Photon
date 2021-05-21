@@ -6,6 +6,7 @@
 #include <string>
 #include <algorithm>
 #include <map>
+#include <tuple>
 
 using namespace photon;
 
@@ -171,17 +172,8 @@ void parser::fetch_starting_tag(std::string line, int index, globals &global)
       {
 
          global.on_next_line = 'D';
-         if (global.openTags.empty())
-         {
-            global.pending_nodes.push_back({dom::_type::_node, 0, {}, {}, attrs, 0, ""});
-            global.openTags.push_back({0, tagname});
-         }
-
-         else
-         {
-            global.pending_nodes.push_back({dom::_type::_node, global.openTags.back().id, {}, {}, attrs, 0, ""});
-            global.openTags.push_back({global.openTags.back().id, tagname});
-         }
+         if (global.openTags.empty()) { insert_node(0, tagname, attrs, global); }
+         else { insert_node(global.openTags.back().id + 1, tagname, attrs, global); }
 
          return;
       }
@@ -194,17 +186,8 @@ void parser::fetch_starting_tag(std::string line, int index, globals &global)
          tagname = restoftheline.substr(0, restoftheline.find(' '));
          global.on_next_line = 'D';
 
-         if (global.openTags.empty())
-         {
-            global.pending_nodes.push_back({dom::_type::_node, 0, {}, {}, {}, 0, ""});
-            global.openTags.push_back({0, tagname});
-         }
-
-         else
-         {
-            global.pending_nodes.push_back({dom::_type::_node, global.openTags.back().id, {}, {}, {}, 0, ""});
-            global.openTags.push_back({global.openTags.back().id, tagname});
-         }
+         if (global.openTags.empty()) { insert_node(0, tagname, attrs, global); }
+         else { insert_node(global.openTags.back().id + 1, tagname, attrs, global); }
 
          return;
       }
@@ -214,9 +197,17 @@ void parser::fetch_starting_tag(std::string line, int index, globals &global)
 
    unsigned int id;
 
-   if (global.openTags.empty()) id = global.dom.createNode(0, "", attrs);
-   else id = global.dom.insertNode({dom::_type::_node, global.openTags.back().id, {}, {}, attrs, 0, ""});
-   if (tagname != "img") global.openTags.push_back({id, tagname});
+   if (global.openTags.empty()) id = global.dom->createNode(0, "", attrs);
+   else id = global.dom->insertNode({dom::_type::_node, global.openTags.back().id, {}, {}, attrs,
+    0, // <- this ####################
+     ""});
+   if (tagname != "img") {
+      if (!global.openTags.empty()) 
+         global.openTags.push_back({id, global.openTags.back().id, tagname, attrs});
+      else global.openTags.push_back({id, 0, tagname, attrs});
+   }
+
+   global.elements.insert({id, tagname});
 }
 
 void parser::fetch_endtag(std::string search_string, globals &global)
@@ -248,9 +239,9 @@ void parser::fetch_data(std::string search_string, globals &global, bool recurse
          global.data_parsed = global.current_line;
 
          if (global.openTags.empty())
-            global.dom.crateTextNode(0, data);
+            global.dom->crateTextNode(0, data);
          else
-            global.dom.crateTextNode(global.openTags.back().id, data);
+            global.dom->crateTextNode(global.openTags.back().id, data);
 
          if (dataSearch.find('<') != std::string::npos)
          {
@@ -285,17 +276,18 @@ void parser::fetch_line(std::string line, globals &global)
       {
          std::map<std::string, std::string> attrs = fetch_attr(line.substr(validate_data(line)), 0);
          for (auto attr : attrs)
-            global.pending_nodes.back().atributes.insert({attr.first, attr.second});
+            global.pending_nodes.back().attributes.insert({attr.first, attr.second});
 
          if (line.find('>') != std::string::npos)
          {
-            dom::nodeInternal node = global.pending_nodes.back();
+            // dom::nodeInternal node = {dom::_type::_node, global.pending_nodes.back().parent, {},
+            // {}, global.pending_nodes.back().attributes, };
             global.on_next_line = 'A';
-            if (global.openTags.size() == 1)
-               global.dom.createNode(node.parent, global.openTags.back().tag, node.atributes);
-            else
-               global.dom.insertNode({dom::_type::_node, global.openTags.back().id, {}, {}, node.atributes, 0, ""});
 
+            unsigned int id = global.dom->createNode(global.pending_nodes.back().parent, global.pending_nodes.back().tag,
+            global.pending_nodes.back().attributes);
+
+            global.elements.insert({id, global.openTags.back().tag});
             global.pending_nodes.pop_back();
          }
       }
@@ -324,12 +316,12 @@ void parser::fetch_line(std::string line, globals &global)
    global.current_line++;
 }
 
-void parser::parse(std::string path)
+std::tuple<std::shared_ptr<_dom>, std::map<unsigned int, std::string>> parser::parse(std::string path)
 {
    globals global;
    global.current_line = 0;
    global.data_parsed = -1;
-   _dom dom;
+   global.dom = std::make_shared<_dom>();
    std::string line;
    std::ifstream htmlFile(path);
    if (htmlFile.is_open())
@@ -338,5 +330,26 @@ void parser::parse(std::string path)
 
       while (std::getline(htmlFile, line))
          fetch_line(line, global);
+   }
+
+   return {global.dom,global.elements};
+}
+
+void parser::insert_node (unsigned int id, std::string tagname, 
+std::map<std::string, std::string> attrs,
+globals &global )
+{
+   if (global.openTags.empty())
+   {
+      node insert = {id, 0, tagname, attrs};
+      global.openTags.push_back(insert);
+      global.pending_nodes.push_back(insert);
+   }
+
+   else
+   {
+      node insert = {id, global.openTags.back().id, tagname, attrs};
+      global.openTags.push_back(insert);
+      global.pending_nodes.push_back(insert);
    }
 }

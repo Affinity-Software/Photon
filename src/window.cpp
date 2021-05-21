@@ -1,6 +1,7 @@
 #include "photon/window.hpp"
 #include "dom.hpp"
 #include "renderer/renderer.hpp"
+#include "photon/parser.hpp"
 
 #include <GLFW/glfw3.h>
 
@@ -54,4 +55,11 @@ window::~window()
 dom::node window::getRoot(){
 	dom::node temp(pimpl->dom,0);
 	return temp;
+}
+
+
+void window::loadHtml(std::filesystem::path path)
+{
+	auto [pimpl->dom , temp] = parser::parse(path);
+	
 }

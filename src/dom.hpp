@@ -6,6 +6,7 @@
 #include <memory>
 #include <mutex>
 #include <map>
+#include <unordered_map>
 
 //TODO proper dom interface
 namespace photon
@@ -18,6 +19,8 @@ namespace photon
       uint32_t nextid = 0;
       void deleteNodeRec(const dom::id &id);
       friend dom::node;
+      std::unordered_map<std::string,uint32_t> tagNameIds;
+      uint32_t nextTagNameId = 0;
 
    public:
       std::map<uint32_t, dom::nodeInternal> domObjects;
@@ -30,6 +33,5 @@ namespace photon
       dom::id createNode(const dom::id &parent, const std::string &tag,const std::map<std::string, std::string>& attributes);
       dom::id crateTextNode(const dom::id &parent, const std::string &text);
       std::vector<dom::id> getNodesByTag(const std::string &tag); //TODO implament this
-      void loadFile(std::string path);
    };
 }

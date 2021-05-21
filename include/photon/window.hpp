@@ -1,7 +1,7 @@
 #pragma once
 
 #include "photon/node.hpp"
-
+#include <filesystem>
 
 namespace photon{
    class window
@@ -14,5 +14,6 @@ namespace photon{
       ~window();
       window(window&) = delete;
       dom::node getRoot();
+      void loadHtml(std::filesystem::path path);
    };
 }

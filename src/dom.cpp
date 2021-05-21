@@ -6,8 +6,6 @@
 #include <unordered_map>
 #include <iostream>
 
-#include "photon/parser.hpp"
-
 #define NEGATIVE (-1)
 #define AFFIRMATIVE int 1
 
@@ -15,12 +13,6 @@
 // TODO: GET THE DATA PARSING PART COMPLETE (THIS DOSE NOT INCLUDE THE 1ST TODO)... checked
 
 using namespace photon;
-
-namespace photon::globals
-{
-   std::unordered_map<std::string, unsigned int> __tagNames__;
-   unsigned int __nextTagId__ = 1;
-}
 
 _dom::_dom()
 {
@@ -37,7 +29,8 @@ _dom::~_dom()
 
 void _dom::insertNode(const _dom &toinsert)
 {
-   m.lock();
+  /*  m.lock();
+   toinsert.m.lock();
    dom::id end = toinsert.domObjects.end()->first;
    size_t baseOfset = nextid;
    for (auto &i : toinsert.domObjects)
@@ -50,7 +43,8 @@ void _dom::insertNode(const _dom &toinsert)
       domObjects[i.first + baseOfset] = temp;
    }
    nextid += end;
-   m.unlock();
+   toinsert.m.unlock();
+   m.unlock(); */
 }
 
 dom::id _dom::insertNode(const dom::nodeInternal &toinsert)
@@ -77,15 +71,16 @@ void _dom::deleteNodeRec(const dom::id &id)
 
 dom::id _dom::createNode(const dom::id &parent, const std::string &tag,const std::map<std::string, std::string>& attributes)
 {
-   auto temp = &globals::__tagNames__[tag];
+   auto temp = &tagNameIds[tag];
    if (*temp)
    {
-      *temp = globals::__nextTagId__;
-      globals::__nextTagId__++;
+      *temp = nextTagNameId;
+      nextTagNameId++;
    }
 
    dom::nodeInternal node = {dom::_type::_node, parent, {}, {}, attributes, *temp, ""};
    domObjects[nextid] = node;
+   if (parent != 0) domObjects[parent].children.push_back(nextid);
       _dom dom;
    nextid++;
    return nextid - 1;
@@ -96,4 +91,15 @@ dom::id _dom::crateTextNode(const dom::id& parent, const std::string& text)
    domObjects[nextid] = {dom::_type::text,parent, {}, {}, {}, 0, text};
    nextid++;
    return nextid - 1;
+}
+
+std::vector<dom::id> _dom::getNodesByTag(const std::string &tag)
+{
+   std::vector<dom::id> ret;
+   dom::id searchVal = tagNameIds[tag];
+   for(const auto & i : domObjects)
+      if(i.second.tag == searchVal)
+         ret.push_back(i.first);
+   
+   return ret;
 }
